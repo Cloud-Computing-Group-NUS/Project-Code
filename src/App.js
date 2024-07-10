@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Folder, File, Send, Save, Edit, PlusCircle, Trash2 } from 'lucide-react';
+import { Save, Edit } from 'lucide-react';
 import FileTree from './components/FileTree';
 import Editor from './components/Editor';
 import ChatBox from './components/ChatBox';
 import axios from 'axios';
 import io from 'socket.io-client';
 
-const socket = io('http://localhost:3000');  // 假设后端在3001端口
+const socket = io('http://localhost:3000');  // Assuming backend is on port 3000
 
-// 示例文件系统
 const initialFileSystem = [
   { 
     id: '1', 
@@ -24,12 +23,11 @@ const initialFileSystem = [
 
 function App() {
   const [fileSystem, setFileSystem] = useState(initialFileSystem);
-  const [selectedFile, setSelectedFile] = useState(initialFileSystem[0].children[0]);  // 默认选择第一个文件
+  const [selectedFile, setSelectedFile] = useState(initialFileSystem[0].children[0]);
   const [aiModifiedContent, setAiModifiedContent] = useState('');
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    // 设置 Socket.io 监听器
     socket.on('fileSystemUpdate', (updatedFileSystem) => {
       setFileSystem(updatedFileSystem);
     });
@@ -50,10 +48,7 @@ function App() {
 
   const handleSaveContent = async () => {
     try {
-      // 这里应该发送请求到后端保存文件内容
-      // await axios.post('/api/save-file', { fileId: selectedFile.id, content: selectedFile.content });
-      
-      // 更新本地文件系统
+      // Simulate saving file content to backend
       setFileSystem(prevFileSystem => {
         const updateFile = (items) => {
           return items.map(item => {
@@ -78,8 +73,8 @@ function App() {
   const handleSendMessage = async (message) => {
     setMessages([...messages, { sender: 'user', content: message }]);
     try {
-      const response = await axios.post('/api/chat', { message, context: messages });
-      setMessages(prevMessages => [...prevMessages, { sender: 'ai', content: response.data.reply }]);
+      // Simulate sending message to backend
+      setMessages(prevMessages => [...prevMessages, { sender: 'ai', content: 'Sample AI reply' }]);
     } catch (error) {
       console.error('Error sending message:', error);
       setMessages(prevMessages => [...prevMessages, { sender: 'ai', content: message }]);
@@ -88,8 +83,8 @@ function App() {
 
   const handleGenerateModification = async () => {
     try {
-      const response = await axios.post('/api/generate-modification', { content: selectedFile.content });
-      setAiModifiedContent(response.data.modifiedContent);
+      // Simulate generating modification
+      setAiModifiedContent('Modified AI content');
     } catch (error) {
       console.error('Error generating modification:', error);
     }
@@ -97,27 +92,7 @@ function App() {
 
   const handleSubmitModification = async () => {
     try {
-      await axios.post('/api/submit-modification', {
-        fileId: selectedFile.id,
-        content: selectedFile.content,
-        modifiedContent: aiModifiedContent,
-        chatHistory: messages
-      });
-      // 更新文件系统
-      setFileSystem(prevFileSystem => {
-        const updateFile = (items) => {
-          return items.map(item => {
-            if (item.id === selectedFile.id) {
-              return { ...item, content: aiModifiedContent };
-            }
-            if (item.children) {
-              return { ...item, children: updateFile(item.children) };
-            }
-            return item;
-          });
-        };
-        return updateFile(prevFileSystem);
-      });
+      // Simulate submitting modification to backend
       setSelectedFile(prev => ({ ...prev, content: aiModifiedContent }));
       setAiModifiedContent('');
     } catch (error) {
@@ -169,7 +144,7 @@ function App() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
+    <div className="h-screen flex flex-col bg-gray-100 relative">
       <div className="flex-grow flex p-4 space-x-4">
         <div className="w-1/4 bg-white rounded-lg shadow-md p-4 overflow-y-auto">
           <h2 className="text-xl font-bold mb-4 text-gray-800">Files</h2>
@@ -213,17 +188,17 @@ function App() {
           </div>
         </div>
       </div>
-      <div className="flex justify-end p-4 space-x-2">
+      <div className="absolute bottom-3.5 left-3.5 flex space-x-2">
         <button 
           onClick={handleGenerateModification} 
-          className="p-2 bg-green-500 text-white rounded-md flex items-center transition duration-300 ease-in-out hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+          className="p-2 bg-green-500 text-white rounded-md flex items-center transition duration-300 ease-in-out hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 text-sm"
         >
           <Edit size={20} className="mr-1" />
           Generate Modification
         </button>
         <button 
           onClick={handleSubmitModification} 
-          className="p-2 bg-blue-500 text-white rounded-md flex items-center transition duration-300 ease-in-out hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          className="p-2 bg-blue-500 text-white rounded-md flex items-center transition duration-300 ease-in-out hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm"
         >
           <Save size={20} className="mr-1" />
           Submit Modification

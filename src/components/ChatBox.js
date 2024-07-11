@@ -11,11 +11,36 @@
 
 //   useEffect(scrollToBottom, [messages]);
 
-//   const handleSend = () => {
+//   const handleSend = async () => {
 //     if (input.trim()) {
-//       onSendMessage(input);
+//       // 发送用户消息
+//       onSendMessage({ content: input, sender: 'user' });
+      
+//       // 模拟 API 调用来获取 AI 响应
+//       try {
+//         // 这里应该是实际的 API 调用，现在我们只是模拟一个异步操作
+//         const aiResponse = await simulateApiCall(input);
+        
+//         // 发送 AI 响应
+//         onSendMessage({ content: aiResponse, sender: 'ai' });
+//       } catch (error) {
+//         console.error('Error getting AI response:', error);
+//         // 可以在这里添加错误处理，比如向用户显示一条错误消息
+//       }
+
 //       setInput('');
 //     }
+//   };
+
+//   // 模拟 API 调用的函数
+//   const simulateApiCall = (userInput) => {
+//     return new Promise((resolve) => {
+//       // 模拟网络延迟
+//       setTimeout(() => {
+//         // 暂时只是重复用户的输入作为 AI 的响应
+//         resolve(`AI 回复: ${userInput}`);
+//       }, 1000); // 1秒的延迟
+//     });
 //   };
 
 //   return (
@@ -70,36 +95,11 @@ const ChatBox = ({ messages, onSendMessage }) => {
 
   useEffect(scrollToBottom, [messages]);
 
-  const handleSend = async () => {
+  const handleSend = () => {
     if (input.trim()) {
-      // 发送用户消息
-      onSendMessage({ content: input, sender: 'user' });
-      
-      // 模拟 API 调用来获取 AI 响应
-      try {
-        // 这里应该是实际的 API 调用，现在我们只是模拟一个异步操作
-        const aiResponse = await simulateApiCall(input);
-        
-        // 发送 AI 响应
-        onSendMessage({ content: aiResponse, sender: 'ai' });
-      } catch (error) {
-        console.error('Error getting AI response:', error);
-        // 可以在这里添加错误处理，比如向用户显示一条错误消息
-      }
-
+      onSendMessage(input);
       setInput('');
     }
-  };
-
-  // 模拟 API 调用的函数
-  const simulateApiCall = (userInput) => {
-    return new Promise((resolve) => {
-      // 模拟网络延迟
-      setTimeout(() => {
-        // 暂时只是重复用户的输入作为 AI 的响应
-        resolve(`AI 回复: ${userInput}`);
-      }, 1000); // 1秒的延迟
-    });
   };
 
   return (
@@ -126,7 +126,7 @@ const ChatBox = ({ messages, onSendMessage }) => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-          placeholder="输入您的消息..."
+          placeholder="Enter your message..."
         />
         <button 
           onClick={handleSend} 

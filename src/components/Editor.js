@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/prism';
-import '../Editor.css'; // 确保路径正确
+import '../css_file/Editor.css'; // 确保路径正确
 
 const Editor = ({ file, onChange, onSave }) => {
   const [isEditing, setIsEditing] = useState(false);

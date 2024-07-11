@@ -1,5 +1,3 @@
-// 
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Save, Edit } from 'lucide-react';
 import FileTree from './components/FileTree';

@@ -15,15 +15,7 @@ const ChatBox = ({ messages, onSendMessage }) => {
     if (input.trim()) {
       onSendMessage(input);
       setInput('');
-      generateAIResponse(input); // 生成AI回复
     }
-  };
-
-  const generateAIResponse = (userInput) => {
-    // 模拟AI生成回复
-    const aiResponse = `AI 回复: ${userInput}`;
-    const aiMessage = { content: aiResponse, sender: 'ai' };
-    onSendMessage(aiMessage);
   };
 
   return (
@@ -38,7 +30,7 @@ const ChatBox = ({ messages, onSendMessage }) => {
                 : 'bg-gray-100'
             } max-w-3/4`}
           >
-            {typeof msg.content === 'string' ? msg.content : ''}
+            {msg.content}
           </div>
         ))}
         <div ref={messagesEndRef} />

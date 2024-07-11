@@ -11,9 +11,34 @@
 //   const [aiModifiedContent, setAiModifiedContent] = useState('');
 //   const [messages, setMessages] = useState([]);
 
+//   // useEffect(() => {
+//   //   // 在 sessionStorage 中生成并存储唯一用户ID
+//   //   if (!sessionStorage.getItem('userId')) {
+//   //     sessionStorage.setItem('userId', `user_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`);
+//   //   }
+//   //   fetchInitialFileSystem();
+//   //   // 每个访问应用的用户都有一个唯一的标识符，并且在用户首次访问时加载初始的文件系统数据
+//   // }, []);
+
 //   useEffect(() => {
+//     // 在 sessionStorage 中生成并存储唯一用户ID
+//     const existingUserId = sessionStorage.getItem('userId');
+//     console.log('Existing user ID:', existingUserId);
+    
+//     if (!existingUserId) {
+//       const newUserId = `user_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+//       sessionStorage.setItem('userId', newUserId);
+//       console.log('New user ID generated:', newUserId);
+//     } else {
+//       console.log('User ID already exists:', existingUserId);
+//     }
+  
 //     fetchInitialFileSystem();
+  
+//     // 清理函数通常在这里定义，但在这个案例中并不需要
+//     return () => {};
 //   }, []);
+  
 
 //   const fetchInitialFileSystem = async () => {
 //     try {
@@ -62,17 +87,19 @@
 //   };
 
 //   const handleSendMessage = async (message) => {
-//     setMessages(prevMessages => [...prevMessages, { sender: 'user', content: message }]);
+//     const userId = sessionStorage.getItem('userId');
     
 //     const formattedMessage = {
-//       sender: 'user',
+//       sender: userId,
 //       content: message,
 //       timestamp: new Date().toISOString(),
-//       file: selectedFile ? selectedFile.name : 'No file selected'
+//       file: selectedFile
 //     };
 
+//     setMessages(prevMessages => [...prevMessages, { sender: 'user', content: message }]);
+
 //     try {
-//       const response = await axios.post('http://ai-agent:5000/ai_agent', { message, file: selectedFile });
+//       const response = await axios.post('http://ai-agent:5000/ai_agent', { message, file: selectedFile, userId });
 //       setMessages(prevMessages => [...prevMessages, { sender: 'ai', content: response.data.content }]);
 //     } catch (error) {
 //       console.error('Error sending message:', error);
@@ -206,34 +233,32 @@ function App() {
   const [aiModifiedContent, setAiModifiedContent] = useState('');
   const [messages, setMessages] = useState([]);
 
-  // useEffect(() => {
-  //   // 在 sessionStorage 中生成并存储唯一用户ID
-  //   if (!sessionStorage.getItem('userId')) {
-  //     sessionStorage.setItem('userId', `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
-  //   }
-  //   fetchInitialFileSystem();
-  //   // 每个访问应用的用户都有一个唯一的标识符，并且在用户首次访问时加载初始的文件系统数据
-  // }, []);
-
   useEffect(() => {
-    // 在 sessionStorage 中生成并存储唯一用户ID
     const existingUserId = sessionStorage.getItem('userId');
-    console.log('Existing user ID:', existingUserId);
-    
     if (!existingUserId) {
       const newUserId = `user_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
       sessionStorage.setItem('userId', newUserId);
-      console.log('New user ID generated:', newUserId);
-    } else {
-      console.log('User ID already exists:', existingUserId);
     }
-  
+
     fetchInitialFileSystem();
-  
-    // 清理函数通常在这里定义，但在这个案例中并不需要
-    return () => {};
-  }, []);
-  
+
+    // Cleanup function
+    return () => {
+      const userId = sessionStorage.getItem('userId');
+      const formattedMessage = {
+        sender: userId,
+      };
+
+      // Sending formattedMessage to the backend
+      axios.post('http://your-backend-api-url', formattedMessage)
+        .then(response => {
+          console.log('Message sent successfully:', response.data);
+        })
+        .catch(error => {
+          console.error('Error sending message:', error);
+        });
+    };
+  }, [selectedFile]);
 
   const fetchInitialFileSystem = async () => {
     try {
@@ -285,11 +310,10 @@ function App() {
     const userId = sessionStorage.getItem('userId');
 
     const formattedMessage = {
-      sender: 'user',
+      sender: userId,
       content: message,
       timestamp: new Date().toISOString(),
-      file: selectedFile ? selectedFile.name : 'No file selected',
-      userId
+      file: selectedFile
     };
 
     setMessages(prevMessages => [...prevMessages, { sender: 'user', content: message }]);
@@ -305,9 +329,9 @@ function App() {
 
   const handleGenerateModification = async () => {
     try {
-      const response = await axios.post('http://ai-agent:5000/ai_agent', { 
-        message: "Generate a modification for this file", 
-        file: selectedFile 
+      const response = await axios.post('http://ai-agent:5000/ai_agent', {
+        message: "Generate a modification for this file",
+        file: selectedFile
       });
       setAiModifiedContent(response.data.content);
     } catch (error) {
@@ -318,8 +342,8 @@ function App() {
   const handleSubmitModification = async () => {
     if (!selectedFile) return;
     try {
-      await axios.post('http://cloud-drive-service:80/api/saveFile', { 
-        file: { ...selectedFile, content: aiModifiedContent } 
+      await axios.post('http://cloud-drive-service:80/api/saveFile', {
+        file: { ...selectedFile, content: aiModifiedContent }
       });
       setSelectedFile(prev => ({ ...prev, content: aiModifiedContent }));
       setAiModifiedContent('');
@@ -356,9 +380,9 @@ function App() {
         <div className="w-1/4 bg-white rounded-lg shadow-md p-4 flex flex-col overflow-hidden">
           <h2 className="text-xl font-bold mb-4 text-gray-800">Files</h2>
           <div className="flex-grow overflow-y-auto">
-            <FileTree 
-              files={fileSystem} 
-              onSelectFile={handleSelectFile} 
+            <FileTree
+              files={fileSystem}
+              onSelectFile={handleSelectFile}
               onCreateFile={handleCreateFile}
               onDeleteFile={handleDeleteFile}
               selectedFileId={selectedFile ? selectedFile.id : null}
@@ -370,7 +394,7 @@ function App() {
             <div className="w-1/2 bg-white rounded-lg shadow-md p-4 flex flex-col overflow-hidden">
               <h2 className="text-xl font-bold mb-4 text-gray-800">Original Content</h2>
               <div className="flex-grow overflow-hidden">
-                <Editor 
+                <Editor
                   file={selectedFile}
                   onChange={handleContentChange}
                   onSave={handleSaveContent}
@@ -380,7 +404,7 @@ function App() {
             <div className="w-1/2 bg-white rounded-lg shadow-md p-4 flex flex-col overflow-hidden">
               <h2 className="text-xl font-bold mb-4 text-gray-800">AI Modified Content</h2>
               <div className="flex-grow overflow-hidden">
-                <Editor 
+                <Editor
                   file={{ ...selectedFile, content: aiModifiedContent }}
                   onChange={setAiModifiedContent}
                   onSave={handleSaveContent}
@@ -395,15 +419,15 @@ function App() {
         </div>
       </div>
       <div className="p-4 flex space-x-2 bg-gray-200">
-        <button 
-          onClick={handleGenerateModification} 
+        <button
+          onClick={handleGenerateModification}
           className="p-2 bg-green-500 text-white rounded-md flex items-center transition duration-300 ease-in-out hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
         >
           <Edit size={20} className="mr-1" />
           Generate Modification
         </button>
-        <button 
-          onClick={handleSubmitModification} 
+        <button
+          onClick={handleSubmitModification}
           className="p-2 bg-blue-500 text-white rounded-md flex items-center transition duration-300 ease-in-out hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
         >
           <Save size={20} className="mr-1" />

@@ -2,85 +2,26 @@ import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/prism';
-import '../css_file/Editor.css'; // Make sure the path is correct
+import '../css_file/Editor.css';
 
-const Section = ({ title, content, language, onChange, isEditing, toggleEdit, handleSave }) => (
-  <div className="section-container">
-    <h3 className="section-title">{title}</h3>
-    <div className="flex-grow mb-2 overflow-auto">
-      {isEditing ? (
-        <textarea
-          className="textarea"
-          value={content || ''}
-          onChange={onChange}
-        />
-      ) : (
-        <div className="w-full h-64 overflow-auto">
-          {language === 'markdown' ? (
-            <div className="markdown-container">
-              <ReactMarkdown>{content || ''}</ReactMarkdown>
-            </div>
-          ) : (
-            <div className="code-container">
-              <SyntaxHighlighter
-                language={language}
-                style={tomorrow}
-                customStyle={{
-                  margin: 0,
-                  padding: '1rem',
-                  height: '100%',
-                }}
-                wrapLines={true}
-                wrapLongLines={true}
-              >
-                {content || ''}
-              </SyntaxHighlighter>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-    <div className="flex justify-between mt-2">
-      <button
-        onClick={toggleEdit}
-        className="button"
-      >
-        {isEditing ? '查看模式' : '编辑模式'}
-      </button>
-      <button
-        onClick={handleSave}
-        className="button button-save"
-      >
-        保存文本
-      </button>
-    </div>
-  </div>
-);
-
-const Editor = ({ file, onChange, onSave }) => {
+const Editor = ({ file, aiModifiedContent, onSave }) => {
   const [isEditingOriginal, setIsEditingOriginal] = useState(false);
   const [isEditingModified, setIsEditingModified] = useState(false);
+  const [originalContent, setOriginalContent] = useState('');
+  const [modifiedContent, setModifiedContent] = useState('');
 
   useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.ctrlKey && event.key === 's') {
-        event.preventDefault();
-        onSave();
-      }
-    };
+    if (file) {
+      setOriginalContent(file.content || '');
+    }
+  }, [file]);
 
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [onSave]);
-
-  if (!file || !file.name) {
-    return <div className="text-gray-500">No file selected or file name undefined</div>;
-  }
+  useEffect(() => {
+    setModifiedContent(aiModifiedContent || '');
+  }, [aiModifiedContent]);
 
   const getLanguage = (fileName) => {
+    if (!fileName) return 'text';
     const extension = fileName.split('.').pop().toLowerCase();
     switch (extension) {
       case 'md': return 'markdown';
@@ -90,54 +31,98 @@ const Editor = ({ file, onChange, onSave }) => {
     }
   };
 
-  const language = getLanguage(file.name);
+  const language = getLanguage(file?.name);
 
-  const handleChangeOriginal = (e) => {
-    onChange({ ...file, originalContent: e.target.value });
-  };
-
-  const handleChangeModified = (e) => {
-    onChange({ ...file, modifiedContent: e.target.value });
-  };
-
-  const toggleEditOriginal = () => {
-    setIsEditingOriginal(!isEditingOriginal);
-  };
-
-  const toggleEditModified = () => {
-    setIsEditingModified(!isEditingModified);
+  const renderContent = (content, isEditing, onChange) => {
+    if (isEditing) {
+      return (
+        <textarea
+          className="w-full h-full p-2 resize-none border-none outline-none"
+          value={content}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      );
+    } else if (language === 'markdown') {
+      return <ReactMarkdown>{content}</ReactMarkdown>;
+    } else {
+      return (
+        <SyntaxHighlighter
+          language={language}
+          style={tomorrow}
+          customStyle={{
+            margin: 0,
+            padding: '1rem',
+            height: '100%',
+          }}
+          wrapLines={true}
+          wrapLongLines={true}
+        >
+          {content}
+        </SyntaxHighlighter>
+      );
+    }
   };
 
   const handleSaveOriginal = () => {
-    onSave({ ...file, originalContent: file.originalContent });
+    onSave(originalContent);
     setIsEditingOriginal(false);
   };
 
   const handleSaveModified = () => {
-    onSave({ ...file, modifiedContent: file.modifiedContent });
+    onSave(modifiedContent);
     setIsEditingModified(false);
   };
 
   return (
-    <div className="w-full h-full flex flex-col p-4 overflow-hidden">
-      <Section
-        title="Original Content"
-        content={file.originalContent || ''}
-        language={language}
-        onChange={handleChangeOriginal}
-        isEditing={isEditingOriginal}
-        toggleEdit={toggleEditOriginal}
-        handleSave={handleSaveOriginal}
-      />
-      <Section
-        title="AI Modified Content"
-        content={file.modifiedContent || ''}
-        language={language}
-        onChange={handleChangeModified}
-        isEditing={isEditingModified}
-        toggleEdit={toggleEditModified}
-        handleSave={handleSaveModified}
-      />
+    <div className="w-full h-full flex space-x-4">
+      <div className="w-1/2 flex flex-col">
+        <h3 className="text-lg font-bold mb-2">Original Content</h3>
+        <div className="flex-grow border rounded-lg overflow-auto p-2">
+          {renderContent(
+            originalContent,
+            isEditingOriginal,
+            setOriginalContent
+          )}
+        </div>
+        <div className="flex justify-between mt-2">
+          <button
+            onClick={() => setIsEditingOriginal(!isEditingOriginal)}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
+          >
+            {isEditingOriginal ? '查看模式' : '编辑模式'}
+          </button>
+          <button
+            onClick={handleSaveOriginal}
+            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
+          >
+            保存文本
+          </button>
+        </div>
+      </div>
+      <div className="w-1/2 flex flex-col">
+        <h3 className="text-lg font-bold mb-2">AI Modified Content</h3>
+        <div className="flex-grow border rounded-lg overflow-auto p-2">
+          {renderContent(
+            modifiedContent,
+            isEditingModified,
+            setModifiedContent
+          )}
+        </div>
+        <div className="flex justify-between mt-2">
+          <button
+            onClick={() => setIsEditingModified(!isEditingModified)}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
+          >
+            {isEditingModified ? '查看模式' : '编辑模式'}
+          </button>
+          <button
+            onClick={handleSaveModified}
+            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
+          >
+            保存文本
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

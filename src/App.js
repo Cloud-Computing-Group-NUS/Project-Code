@@ -27,15 +27,15 @@ function App() {
 
     // Interact with AI-backend
     // Cleanup function to disconnect WebSocket when component unmounts
-    return () => { 
-      // When the component unmounts, send a "disconnect" message to the AI-backend
-      const userId = sessionStorage.getItem('userId');
-      const formattedMessage = { sender: userId };
+    // return () => { 
+    //   // When the component unmounts, send a "disconnect" message to the AI-backend
+    //   const userId = sessionStorage.getItem('userId');
+    //   const formattedMessage = { sender: userId };
       
-      axios.post('http://transit-server:80/cancel', formattedMessage)
-        .then(response => console.log('Message sent successfully:', response.data))
-        .catch(error => console.error('Error sending message:', error));
-    };
+    //   axios.post('http://transit-server:80/cancel', formattedMessage)
+    //     .then(response => console.log('Message sent successfully:', response.data))
+    //     .catch(error => console.error('Error sending message:', error));
+    // };
   }, []);
   
   const findFirstFileInHomeDirectory = (fileSystem) => {
@@ -96,16 +96,16 @@ function App() {
   // Interact with AI-Backend
   const handleSendMessage = async (message) => {
     const userId = sessionStorage.getItem('userId');
-    const formattedMessage = {
+    const SendMessage = {
       sender: userId,
       content: message,
       timestamp: new Date().toISOString(),
       file: selectedFile
     }; 
-    setMessages(prevMessages => [...prevMessages, formattedMessage]);
+    setMessages(prevMessages => [...prevMessages, SendMessage]);
 
     try {
-      const response = await axios.post("http://transit-server:80/get_chat_content", formattedMessage); // send to AI-Backend
+      const response = await axios.post("http://transit-server:80/get_chat_content", SendMessage); // send to AI-Backend
       // add AI-modified content to the chat-message-record
       setMessages(prevMessages => [...prevMessages, { sender: 'ai', content: response.data.content }]);
     } catch (error) {
@@ -116,30 +116,34 @@ function App() {
   };
 
   // Interact with AI-Backend
-  const handleGenerateModification = async () => {
+  const handleGenerateModification = async (message) => {
     try {
       const userId = sessionStorage.getItem('userId');
-      const formattedMessage = {
+      const GenModifyMessage = {
         sender: userId,
+        content: message,
         timestamp: new Date().toISOString(),
         file: selectedFile
-      };
-      const response = await axios.post('http://ai-agent:5000/ai_agent', {
-        message: formattedMessage,
-        file: selectedFile
-      });
+      }; 
+
+      // send to AI-Backend
+      const response = await axios.post('http://transit-server:80/get_file_content', GenModifyMessage);
       setAiModifiedContent(response.data.content);
     } catch (error) {
       console.error('Error generating modification:', error);
     }
   };
 
-  const handleSubmitModification = async () => {
+  const handleSubmitModification = async () => { // wait to be conformed
     if (!selectedFile) return;
+
     try {
-      await axios.post('http://cloud-drive-service:80/api/saveFile', {
-        file: { ...selectedFile, content: aiModifiedContent }
-      });
+      const SubmitModifyMessage = {
+        file: selectedFile, 
+        content: aiModifiedContent
+      };
+
+      await axios.post('http://transit-server:80/get_train_data', SubmitModifyMessage); // send to AI-Backend
       setSelectedFile(prev => ({ ...prev, content: aiModifiedContent }));
       setAiModifiedContent('');
       fetchInitialFileSystem();

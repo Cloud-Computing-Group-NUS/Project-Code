@@ -64,7 +64,7 @@ function App() {
       const response = await axios.get('http://cloud-drive-service:80/api/initialFileSystem');
       setFileSystem(response.data);
       if (response.data.length > 0) {
-        setSelectedFile(response.data[0]);
+        setSelectedFile(response.data[0].content);
       }
     } catch (error) {
       console.error('Error fetching initial file system:', error);
@@ -212,7 +212,7 @@ function App() {
       // fileId 是文件的唯一标识符，它被嵌入到 URL 中，用于告诉后端需要删除哪个文件
 
       fetchInitialFileSystem(); // Refresh the file system
-      if (selectedFile && selectedFile.id === fileId) {
+      if (selectedFile && selectedFile.name === fileId) {
         setSelectedFile(null);
       }
     } catch (error) {
@@ -231,7 +231,7 @@ function App() {
               onSelectFile={handleSelectFile}
               onCreateFile={handleCreateFile}
               onDeleteFile={handleDeleteFile}
-              selectedFileId={selectedFile ? selectedFile.id : null}
+              selectedFileId={selectedFile ? selectedFile.name : null}
             />
           </div>
         </div>

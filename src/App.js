@@ -45,27 +45,15 @@ function App() {
   //   return null;
   // };
 
-  const findFirstFileInHomeDirectory = (fileSystem) => {
-    if (fileSystem && fileSystem.length > 0) {
-      const FirstFile = fileSystem[0];
-      if (FirstFile && FirstFile.type === 'folder') {
-        if (FirstFile.root === PV_ROOT) {
-          return (FirstFile.root && (FirstFile.children.length > 0)) ? root.children[0] : null;
-        }
-      }
-    }
-    return null;
-  };
-
   const fetchInitialFileSystem = async () => {
     try {
       const response = await cloudDriveApi.getInitialFileSystem(); // cloud-drive-service/api/initialFileSystem
-      setFileSystem(response.data); // get FileSystem Object
-
-      const firstFileInHomeDirectory = findFirstFileInHomeDirectory(response.data);
-      if (firstFileInHomeDirectory) {
-        setSelectedFile(firstFileInHomeDirectory); // get First File in "/" as initialization
-      }
+      setFileSystem(response.data); // get fileSystem object
+  
+      // const firstFileInHomeDirectory = findFirstFileInHomeDirectory(response.data); // ensure fileSystem originally has at least 1 file
+      // if (firstFileInHomeDirectory) {
+      //   setSelectedFile(firstFileInHomeDirectory); // get first file in "/" as initialization
+      // }
     } catch (error) {
       console.error('Error fetching initial file system:', error);
     }

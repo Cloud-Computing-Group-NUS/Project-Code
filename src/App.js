@@ -53,6 +53,23 @@ function App() {
         }
       });
       console.log('File saved successfully');
+      setSelectedFile(prevFile => ({ ...prevFile, content }));
+      
+      // Update the file system state
+      setFileSystem(prevFileSystem => {
+        const updateFileInSystem = (files) => {
+          return files.map(file => {
+            if (file.id === selectedFile.id) {
+              return { ...file, content };
+            }
+            if (file.children) {
+              return { ...file, children: updateFileInSystem(file.children) };
+            }
+            return file;
+          });
+        };
+        return updateFileInSystem(prevFileSystem);
+      });
     } catch (error) {
       console.error('Error saving file:', error);
     }
@@ -107,7 +124,22 @@ function App() {
       });
       setSelectedFile(prev => ({ ...prev, content: aiModifiedContent }));
       setAiModifiedContent('');
-      fetchInitialFileSystem();
+      
+      // Update the file system state
+      setFileSystem(prevFileSystem => {
+        const updateFileInSystem = (files) => {
+          return files.map(file => {
+            if (file.id === selectedFile.id) {
+              return { ...file, content: aiModifiedContent };
+            }
+            if (file.children) {
+              return { ...file, children: updateFileInSystem(file.children) };
+            }
+            return file;
+          });
+        };
+        return updateFileInSystem(prevFileSystem);
+      });
     } catch (error) {
       console.error('Error submitting modification:', error);
     }
@@ -115,8 +147,26 @@ function App() {
 
   const handleCreateFile = async (parentId, fileName, isFolder = false) => {
     try {
-      await cloudDriveApi.createFile({ parentId, name: fileName, type: isFolder ? 'folder' : 'file' });
-      fetchInitialFileSystem();
+      const response = await cloudDriveApi.createFile({ parentId, name: fileName, type: isFolder ? 'folder' : 'file' });
+      const newFile = response.data.file;
+      
+      setFileSystem(prevFileSystem => {
+        const addFileToSystem = (files) => {
+          return files.map(file => {
+            if (file.id === parentId) {
+              return {
+                ...file,
+                children: [...(file.children || []), newFile]
+              };
+            }
+            if (file.children) {
+              return { ...file, children: addFileToSystem(file.children) };
+            }
+            return file;
+          });
+        };
+        return addFileToSystem(prevFileSystem);
+      });
     } catch (error) {
       console.error(`Error creating ${isFolder ? 'folder' : 'file'}:`, error);
     }
@@ -128,7 +178,21 @@ function App() {
       if (selectedFile && selectedFile.id === fileId) {
         setSelectedFile(null);
       }
-      fetchInitialFileSystem();
+      
+      setFileSystem(prevFileSystem => {
+        const removeFileFromSystem = (files) => {
+          return files.filter(file => {
+            if (file.id === fileId) {
+              return false;
+            }
+            if (file.children) {
+              file.children = removeFileFromSystem(file.children);
+            }
+            return true;
+          });
+        };
+        return removeFileFromSystem(prevFileSystem);
+      });
     } catch (error) {
       console.error('Error deleting file:', error);
     }

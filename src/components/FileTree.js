@@ -50,23 +50,6 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
   );
 
   const renderTree = (items, parentId = 'root') => {
-    if (items.length === 0 && parentId === 'root') {
-      return (
-        <li className="py-1">
-          <div className="flex items-center">
-            <span className="text-gray-500 italic mr-2">Empty filesystem</span>
-            <button
-              onClick={() => setShowNewItemInput(prev => ({ ...prev, root: !prev.root }))}
-              className="p-1 text-green-500 rounded hover:bg-green-100 transition duration-300"
-            >
-              <PlusCircle size={16} />
-            </button>
-          </div>
-          {showNewItemInput.root && renderNewItemInput('root')}
-        </li>
-      );
-    }
-
     return items.map((item) => (
       <li key={item.id} className="py-1">
         {item.type === 'folder' ? (
@@ -127,7 +110,13 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
     ));
   };
 
-  return <ul className="pl-4">{renderTree(files)}</ul>;
+  return (
+    <div className="file-tree">
+      <ul className="pl-4">
+        {renderTree(files)}
+      </ul>
+    </div>
+  );
 };
 
 export default FileTree;

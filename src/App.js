@@ -6,18 +6,20 @@ import ChatBox from './components/ChatBox';
 import { transitServerApi, cloudDriveApi } from './apiClient';
 
 function App() {
-  const [fileSystem, setFileSystem] = useState([]);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [aiModifiedContent, setAiModifiedContent] = useState('');
-  const [messages, setMessages] = useState([]);
+  const [fileSystem, setFileSystem] = useState([]); // file system tree
+  const [selectedFile, setSelectedFile] = useState(null); // current file (object)
+  const [aiModifiedContent, setAiModifiedContent] = useState(''); // AI-modified content (content)
+  const [messages, setMessages] = useState([]); // chat messages history
 
   useEffect(() => {
     const existingUserId = sessionStorage.getItem('userId');
+    // Check if userId exists in sessionStorage
     if (!existingUserId) {
       const newUserId = `user_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
       sessionStorage.setItem('userId', newUserId);  
     }
 
+    // Initialize file system tree
     fetchInitialFileSystem();
 
     // return () => {
@@ -30,14 +32,26 @@ function App() {
     // };
   }, []);
   
+  // const findFirstFileInHomeDirectory = (fileSystem) => {
+  //   for (const item of fileSystem) {
+  //     if (item.name === '~' && item.type === 'directory') {
+  //       return item.children && item.children.length > 0 ? item.children[0] : null;
+  //     } 
+  //     else if (item.children) {
+  //       const result = findFirstFileInHomeDirectory(item.children);
+  //       if (result) return result;
+  //     }
+  //   }
+  //   return null;
+  // };
+
   const findFirstFileInHomeDirectory = (fileSystem) => {
-    for (const item of fileSystem) {
-      if (item.name === '~' && item.type === 'directory') {
-        return item.children && item.children.length > 0 ? item.children[0] : null;
-      } 
-      else if (item.children) {
-        const result = findFirstFileInHomeDirectory(item.children);
-        if (result) return result;
+    if (fileSystem && fileSystem.length > 0) {
+      const FirstFile = fileSystem[0];
+      if (FirstFile && FirstFile.type === 'folder') {
+        if (FirstFile.root === PV_ROOT) {
+          return (FirstFile.root && (FirstFile.children.length > 0)) ? root.children[0] : null;
+        }
       }
     }
     return null;
@@ -45,12 +59,12 @@ function App() {
 
   const fetchInitialFileSystem = async () => {
     try {
-      const response = await cloudDriveApi.getInitialFileSystem();
-      setFileSystem(response.data);
+      const response = await cloudDriveApi.getInitialFileSystem(); // cloud-drive-service/api/initialFileSystem
+      setFileSystem(response.data); // get FileSystem Object
 
       const firstFileInHomeDirectory = findFirstFileInHomeDirectory(response.data);
       if (firstFileInHomeDirectory) {
-        setSelectedFile(firstFileInHomeDirectory);
+        setSelectedFile(firstFileInHomeDirectory); // get First File in "/" as initialization
       }
     } catch (error) {
       console.error('Error fetching initial file system:', error);

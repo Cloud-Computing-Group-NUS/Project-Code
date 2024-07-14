@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/prism';
-import '../css_file/Editor.css';
+import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Edit, Save, Eye } from 'lucide-react';
 
 const Editor = ({ file, aiModifiedContent, onSave }) => {
   const [isEditingOriginal, setIsEditingOriginal] = useState(false);
@@ -26,24 +26,35 @@ const Editor = ({ file, aiModifiedContent, onSave }) => {
     switch (extension) {
       case 'md': return 'markdown';
       case 'py': return 'python';
-      case 'cpp': return 'cpp';
+      case 'js': return 'javascript';
+      case 'html': return 'html';
+      case 'css': return 'css';
+      case 'json': return 'json';
+      case 'tsx': case 'ts': return 'typescript';
+      case 'yml': case 'yaml': return 'yaml';
+      case 'sh': return 'bash';
+      case 'sql': return 'sql';
       default: return 'text';
     }
   };
 
-  const language = getLanguage(file?.name);
+  const language = file ? getLanguage(file.name) : 'text';
 
   const renderContent = (content, isEditing, onChange) => {
     if (isEditing) {
       return (
         <textarea
-          className="w-full h-full p-2 resize-none border-none outline-none"
+          className="w-full h-full p-2 resize-none border-none outline-none bg-gray-100 font-mono"
           value={content}
           onChange={(e) => onChange(e.target.value)}
         />
       );
     } else if (language === 'markdown') {
-      return <ReactMarkdown>{content}</ReactMarkdown>;
+      return (
+        <div className="prose max-w-none p-4 overflow-auto">
+          <ReactMarkdown>{content}</ReactMarkdown>
+        </div>
+      );
     } else {
       return (
         <SyntaxHighlighter
@@ -53,6 +64,7 @@ const Editor = ({ file, aiModifiedContent, onSave }) => {
             margin: 0,
             padding: '1rem',
             height: '100%',
+            fontSize: '0.9rem',
           }}
           wrapLines={true}
           wrapLongLines={true}
@@ -76,51 +88,55 @@ const Editor = ({ file, aiModifiedContent, onSave }) => {
   return (
     <div className="w-full h-full flex space-x-4">
       <div className="w-1/2 flex flex-col">
-        <h3 className="text-lg font-bold mb-2">Original Content</h3>
-        <div className="flex-grow border rounded-lg overflow-auto p-2">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-lg font-bold">Original Content</h3>
+          <div>
+            <button
+              onClick={() => setIsEditingOriginal(!isEditingOriginal)}
+              className="p-2 bg-blue-500 text-white rounded mr-2 hover:bg-blue-600 transition duration-300"
+            >
+              {isEditingOriginal ? <Eye size={16} /> : <Edit size={16} />}
+            </button>
+            <button
+              onClick={handleSaveOriginal}
+              className="p-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
+            >
+              <Save size={16} />
+            </button>
+          </div>
+        </div>
+        <div className="flex-grow border rounded-lg overflow-auto">
           {renderContent(
             originalContent,
             isEditingOriginal,
             setOriginalContent
           )}
         </div>
-        <div className="flex justify-between mt-2">
-          <button
-            onClick={() => setIsEditingOriginal(!isEditingOriginal)}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
-          >
-            {isEditingOriginal ? '查看模式' : '编辑模式'}
-          </button>
-          <button
-            onClick={handleSaveOriginal}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
-          >
-            保存文本
-          </button>
-        </div>
       </div>
       <div className="w-1/2 flex flex-col">
-        <h3 className="text-lg font-bold mb-2">AI Modified Content</h3>
-        <div className="flex-grow border rounded-lg overflow-auto p-2">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-lg font-bold">AI Modified Content</h3>
+          <div>
+            <button
+              onClick={() => setIsEditingModified(!isEditingModified)}
+              className="p-2 bg-blue-500 text-white rounded mr-2 hover:bg-blue-600 transition duration-300"
+            >
+              {isEditingModified ? <Eye size={16} /> : <Edit size={16} />}
+            </button>
+            <button
+              onClick={handleSaveModified}
+              className="p-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
+            >
+              <Save size={16} />
+            </button>
+          </div>
+        </div>
+        <div className="flex-grow border rounded-lg overflow-auto">
           {renderContent(
             modifiedContent,
             isEditingModified,
             setModifiedContent
           )}
-        </div>
-        <div className="flex justify-between mt-2">
-          <button
-            onClick={() => setIsEditingModified(!isEditingModified)}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
-          >
-            {isEditingModified ? '查看模式' : '编辑模式'}
-          </button>
-          <button
-            onClick={handleSaveModified}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
-          >
-            保存文本
-          </button>
         </div>
       </div>
     </div>

@@ -1,74 +1,57 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Save, Edit } from 'lucide-react';
+import io from 'socket.io-client';
 import FileTree from './components/FileTree';
 import Editor from './components/Editor';
 import ChatBox from './components/ChatBox';
 import { transitServerApi, cloudDriveApi } from './apiClient';
 
 function App() {
-  const [fileSystem, setFileSystem] = useState([]); // file system tree
-  const [selectedFile, setSelectedFile] = useState(null); // current file (object)
-  const [aiModifiedContent, setAiModifiedContent] = useState(''); // AI-modified content (content)
-  const [messages, setMessages] = useState([]); // chat messages history
+  const [fileSystem, setFileSystem] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [aiModifiedContent, setAiModifiedContent] = useState('');
+  const [messages, setMessages] = useState([]);
 
   useEffect(() => {
     const existingUserId = sessionStorage.getItem('userId');
-    // Check if userId exists in sessionStorage
     if (!existingUserId) {
       const newUserId = `user_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
       sessionStorage.setItem('userId', newUserId);  
     }
 
-    // Initialize file system tree
     fetchInitialFileSystem();
 
-    // return () => {
-    //   const userId = sessionStorage.getItem('userId');
-    //   const formattedMessage = { user: userId };
-      
-    //   transitServerApi.cancel(formattedMessage)
-    //     .then(response => console.log('Message sent successfully:', response.data))
-    //     .catch(error => console.error('Error sending message:', error));
-    // };
+    const socket = io('/ng/cloud-drive-service', {
+      path: '/socket.io'
+    });
+    socket.on('fileSystemUpdate', (updatedFileSystem) => {
+      setFileSystem(updatedFileSystem);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
-  
-  // const findFirstFileInHomeDirectory = (fileSystem) => {
-  //   for (const item of fileSystem) {
-  //     if (item.name === '~' && item.type === 'directory') {
-  //       return item.children && item.children.length > 0 ? item.children[0] : null;
-  //     } 
-  //     else if (item.children) {
-  //       const result = findFirstFileInHomeDirectory(item.children);
-  //       if (result) return result;
-  //     }
-  //   }
-  //   return null;
-  // };
 
   const fetchInitialFileSystem = async () => {
     try {
-      const response = await cloudDriveApi.getInitialFileSystem(); // cloud-drive-service/api/initialFileSystem
-      setFileSystem(response.data); // get fileSystem object
-  
-      // const firstFileInHomeDirectory = findFirstFileInHomeDirectory(response.data); // ensure fileSystem originally has at least 1 file
-      // if (firstFileInHomeDirectory) {
-      //   setSelectedFile(firstFileInHomeDirectory); // get first file in "/" as initialization
-      // }
+      const response = await cloudDriveApi.getInitialFileSystem();
+      setFileSystem(response.data);
     } catch (error) {
       console.error('Error fetching initial file system:', error);
     }
   };
-  
+
   const handleSaveContent = useCallback(async (content) => {
     if (!selectedFile) return;
 
     try {
-      const SaveMessage = {
-        filePath: selectedFile.id,
-        content: content
-      };
-
-      await cloudDriveApi.saveFile(SaveMessage);
+      await cloudDriveApi.saveFile({
+        file: {
+          id: selectedFile.id,
+          content: content
+        }
+      });
       console.log('File saved successfully');
     } catch (error) {
       console.error('Error saving file:', error);
@@ -82,34 +65,32 @@ function App() {
 
   const handleSendMessage = async (message) => {
     const userId = sessionStorage.getItem('userId');
-    const SendMessage = {
-      user: userId,
+    const newMessage = {
+      sender: userId,
       content: message,
       timestamp: new Date().toISOString(),
       file: selectedFile
-    }; 
-    setMessages(prevMessages => [...prevMessages, SendMessage]);
+    };
+    setMessages(prevMessages => [...prevMessages, newMessage]);
 
     try {
-      const response = await transitServerApi.getChatContent(SendMessage);
-      setMessages(prevMessages => [...prevMessages, { user: 'ai', content: response.data.content }]);
+      const response = await transitServerApi.getChatContent(newMessage);
+      setMessages(prevMessages => [...prevMessages, { sender: 'ai', content: response.data.content }]);
     } catch (error) {
       console.error('Error sending message:', error);
-      setMessages(prevMessages => [...prevMessages, { user: 'ai', content: 'Sorry, there was an error processing your request.' }]);
+      setMessages(prevMessages => [...prevMessages, { sender: 'ai', content: 'Sorry, there was an error processing your request.' }]);
     }
   };
 
-  const handleGenerateModification = async (message) => {
+  const handleGenerateModification = async () => {
     try {
       const userId = sessionStorage.getItem('userId');
-      const GenModifyMessage = {
-        user: userId,
-        content: message,
+      const response = await transitServerApi.getFileContent({
+        sender: userId,
+        content: "Please modify this file",
         timestamp: new Date().toISOString(),
         file: selectedFile
-      }; 
-
-      const response = await transitServerApi.getFileContent(GenModifyMessage);
+      });
       setAiModifiedContent(response.data.content);
     } catch (error) {
       console.error('Error generating modification:', error);
@@ -120,12 +101,10 @@ function App() {
     if (!selectedFile) return;
 
     try {
-      const SubmitModifyMessage = {
-        file: selectedFile, 
+      await transitServerApi.getTrainData({
+        file: selectedFile,
         content: aiModifiedContent
-      };
-
-      await transitServerApi.getTrainData(SubmitModifyMessage);
+      });
       setSelectedFile(prev => ({ ...prev, content: aiModifiedContent }));
       setAiModifiedContent('');
       fetchInitialFileSystem();
@@ -134,48 +113,22 @@ function App() {
     }
   };
 
-  const handleCreateFile = async (parentId, fileName) => {
+  const handleCreateFile = async (parentId, fileName, isFolder = false) => {
     try {
-      const CreateMessage = {
-        filePath: `${parentId}/${fileName}`,
-        name: fileName,
-        content: "Initializing new file...\n"
-      };
-
-      await cloudDriveApi.createFile(CreateMessage);
+      await cloudDriveApi.createFile({ parentId, name: fileName, type: isFolder ? 'folder' : 'file' });
       fetchInitialFileSystem();
     } catch (error) {
-      console.error('Error creating file:', error);
+      console.error(`Error creating ${isFolder ? 'folder' : 'file'}:`, error);
     }
   };
 
-  const handleCreateFolder = async (parentId, folderName) => {
+  const handleDeleteFile = async (fileId) => {
     try {
-      const CreateFolderMessage = {
-        filePath: `${parentId}/${folderName}`,
-        name: folderName,
-        type: 'directory'
-      };
-
-      await cloudDriveApi.createFolder(CreateFolderMessage);
-      fetchInitialFileSystem();
-    } catch (error) {
-      console.error('Error creating folder:', error);
-    }
-  };
-
-  const handleDeleteFile = async (fileId, fileName) => {
-    try {
-      const DeleteMessage = {
-        filePath: fileId,
-        fileName: fileName
-      };
-
-      await cloudDriveApi.deleteFile(DeleteMessage);
-      fetchInitialFileSystem();
-      if (selectedFile && selectedFile.name === fileName) {
+      await cloudDriveApi.deleteFile({ fileId });
+      if (selectedFile && selectedFile.id === fileId) {
         setSelectedFile(null);
       }
+      fetchInitialFileSystem();
     } catch (error) {
       console.error('Error deleting file:', error);
     }
@@ -191,7 +144,6 @@ function App() {
               files={fileSystem}
               onSelectFile={handleSelectFile}
               onCreateFile={handleCreateFile}
-              onCreateFolder={handleCreateFolder}
               onDeleteFile={handleDeleteFile}
               selectedFileId={selectedFile ? selectedFile.id : null}
             />

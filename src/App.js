@@ -55,7 +55,6 @@ function App() {
       console.log('File saved successfully');
       setSelectedFile(prevFile => ({ ...prevFile, content }));
       
-      // Update the file system state
       setFileSystem(prevFileSystem => {
         const updateFileInSystem = (files) => {
           return files.map(file => {
@@ -125,7 +124,6 @@ function App() {
       setSelectedFile(prev => ({ ...prev, content: aiModifiedContent }));
       setAiModifiedContent('');
       
-      // Update the file system state
       setFileSystem(prevFileSystem => {
         const updateFileInSystem = (files) => {
           return files.map(file => {
@@ -174,7 +172,7 @@ function App() {
 
   const handleDeleteFile = async (fileId) => {
     try {
-      await cloudDriveApi.deleteFile({ fileId });
+      await cloudDriveApi.deleteFile({ fileId }); // 修改这里，传递一个对象
       if (selectedFile && selectedFile.id === fileId) {
         setSelectedFile(null);
       }
@@ -193,6 +191,7 @@ function App() {
         };
         return removeFileFromSystem(prevFileSystem);
       });
+      console.log('File deleted successfully');
     } catch (error) {
       console.error('Error deleting file:', error);
     }

@@ -85,7 +85,7 @@ function App() {
       sender: userId,
       content: message,
       timestamp: new Date().toISOString(),
-      file: selectedFile
+      file: selectedFile ? selectedFile.id : null // 只发送文件ID，而不是整个文件对象
     };
     setMessages(prevMessages => [...prevMessages, newMessage]);
 
@@ -105,7 +105,7 @@ function App() {
         sender: userId,
         content: "Please modify this file",
         timestamp: new Date().toISOString(),
-        file: selectedFile
+        file: selectedFile ? selectedFile.id : null // 只发送文件ID
       });
       setAiModifiedContent(response.data.content);
     } catch (error) {
@@ -118,7 +118,7 @@ function App() {
 
     try {
       await transitServerApi.getTrainData({
-        file: selectedFile,
+        file: selectedFile.id, // 只发送文件ID
         content: aiModifiedContent
       });
       setSelectedFile(prev => ({ ...prev, content: aiModifiedContent }));
@@ -150,6 +150,9 @@ function App() {
       
       setFileSystem(prevFileSystem => {
         const addFileToSystem = (files) => {
+          if (parentId === 'root') {
+            return [...files, newFile];
+          }
           return files.map(file => {
             if (file.id === parentId) {
               return {
@@ -172,7 +175,7 @@ function App() {
 
   const handleDeleteFile = async (fileId) => {
     try {
-      await cloudDriveApi.deleteFile({ fileId }); // 修改这里，传递一个对象
+      await cloudDriveApi.deleteFile({ fileId });
       if (selectedFile && selectedFile.id === fileId) {
         setSelectedFile(null);
       }

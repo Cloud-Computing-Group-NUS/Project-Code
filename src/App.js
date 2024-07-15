@@ -7,14 +7,15 @@ import ChatBox from './components/ChatBox';
 import { transitServerApi, cloudDriveApi } from './apiClient';
 
 function App() {
-  const [fileSystem, setFileSystem] = useState([]); // FileSystem "Object"
-  const [selectedFile, setSelectedFile] = useState(null); // SelectedFile "Object"
-  const [aiModifiedContent, setAiModifiedContent] = useState(''); // AI-modified "Content"
-  const [messages, setMessages] = useState([]); // Conversation "Messages History"
+  const [fileSystem, setFileSystem] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [aiModifiedContent, setAiModifiedContent] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [messageCount, setMessageCount] = useState(0);
 
   useEffect(() => {
     const existingUserId = sessionStorage.getItem('userId');
-    if (!existingUserId) { // 如果不存在userId，则创建一个新的userId并将其存储在sessionStorage中
+    if (!existingUserId) {
       const newUserId = `user_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
       sessionStorage.setItem('userId', newUserId);  
     }
@@ -23,29 +24,26 @@ function App() {
 
     const socket = io('/ng/cloud-drive-service', {
       path: '/socket.io'
-    }); // 创建一个到服务器的WebSocket连接
+    });
     socket.on('fileSystemUpdate', (updatedFileSystem) => {
       setFileSystem(updatedFileSystem);
-    }); // 监听fileSystemUpdate事件，当服务器发送更新后的文件系统数据时，setFileSystem(updatedFileSystem)将被调用来更新组件状态
+    });
 
     return () => {
       socket.disconnect();
     };
   }, []);
 
-  // with Drive-Backend
   const fetchInitialFileSystem = async () => {
     try {
-      const response = await cloudDriveApi.getInitialFileSystem(); // Web <-> Drive -> initialFileSystem
+      const response = await cloudDriveApi.getInitialFileSystem();
       setFileSystem(response.data);
     } catch (error) {
       console.error('Error fetching initial file system:', error);
     }
   };
 
-  // with Drive-Backend
   const handleSaveContent = useCallback(async (content) => {
-    // 接收一个参数content，即要保存的文件内容
     if (!selectedFile) return;
 
     try {
@@ -56,18 +54,18 @@ function App() {
         }
       });
       console.log('File saved successfully');
-      setSelectedFile(prevFile => ({ ...prevFile, content })); // 更新本地状态selectedFile，将最新的文件内容content赋值给selectedFile的content属性
+      setSelectedFile(prevFile => ({ ...prevFile, content }));
       
-      setFileSystem(prevFileSystem => { // 更新应用程序的文件系统状态，确保文件系统中包含最新的文件内容
-        const updateFileInSystem = (files) => { // 用于递归遍历文件系统树，查找与selectedFile.id匹配的文件，并更新其内容
+      setFileSystem(prevFileSystem => {
+        const updateFileInSystem = (files) => {
           return files.map(file => {
-            if (file.id === selectedFile.id) { // 文件的id与selectedFile.id相同，返回一个新对象，其内容更新为content
+            if (file.id === selectedFile.id) {
               return { ...file, content };
             }
-            if (file.children) { // 文件有子文件，递归调用updateFileInSystem函数来更新子文件的内容
+            if (file.children) {
               return { ...file, children: updateFileInSystem(file.children) };
             }
-            return file; // 文件的id不匹配且没有子文件，直接返回原文件对象
+            return file;
           });
         };
         return updateFileInSystem(prevFileSystem);
@@ -77,28 +75,36 @@ function App() {
     }
   }, [selectedFile]);
 
-  const handleSelectFile = (file) => {
-    setSelectedFile(file);
-    setAiModifiedContent('');
+  const handleSelectFile = async (file) => {
+    try {
+      const response = await cloudDriveApi.getFileContent(file.id);
+      setSelectedFile({ ...file, content: response.data.content });
+      setAiModifiedContent('');
+    } catch (error) {
+      console.error('Error fetching file content:', error);
+    }
   };
 
-  // with AI-Backend
   const handleSendMessage = async (message) => {
-    const userId = sessionStorage.getItem('userId'); // 标识消息的发送者
+    const userId = sessionStorage.getItem('userId');
+    const newMessageCount = messageCount + 1;
+    setMessageCount(newMessageCount);
+
     const newMessage = {
       sender: userId,
       content: message,
       timestamp: new Date().toISOString(),
-      file: selectedFile ? selectedFile.id : null // 如果selectedFile存在，则为它的ID，否则为null。表示如果用户发送消息时关联了一个文件，仅发送文件的ID，而不是整个文件对象
+      file: selectedFile ? selectedFile.id : null,
+      messageCount: newMessageCount
     };
-    setMessages(prevMessages => [...prevMessages, newMessage]); // setMessages函数更新本地状态，将新消息添加 (append) 到现有的消息列表
+    setMessages(prevMessages => [...prevMessages, newMessage]);
 
     try {
       const response = await transitServerApi.getChatContent(newMessage);
-      setMessages(prevMessages => [...prevMessages, { sender: 'ai', content: response.data.content }]); // AI-Res append
+      setMessages(prevMessages => [...prevMessages, { sender: 'ai', content: response.data.content }]);
     } catch (error) {
       console.error('Error sending message:', error);
-      setMessages(prevMessages => [...prevMessages, { sender: 'ai', content: 'Sorry, there was an error processing your request.' }]); // Error append
+      setMessages(prevMessages => [...prevMessages, { sender: 'ai', content: 'Sorry, there was an error processing your request.' }]);
     }
   };
 
@@ -109,9 +115,11 @@ function App() {
         sender: userId,
         content: "Please modify this file",
         timestamp: new Date().toISOString(),
-        file: selectedFile ? selectedFile.id : null // 只发送文件ID
+        file: selectedFile ? selectedFile.id : null,
+        messageCount: messageCount + 1
       });
       setAiModifiedContent(response.data.content);
+      setMessageCount(prevCount => prevCount + 1);
     } catch (error) {
       console.error('Error generating modification:', error);
     }
@@ -122,7 +130,7 @@ function App() {
 
     try {
       await transitServerApi.getTrainData({
-        file: selectedFile.id, // 只发送文件ID
+        file: selectedFile.id,
         content: aiModifiedContent
       });
       setSelectedFile(prev => ({ ...prev, content: aiModifiedContent }));
@@ -147,34 +155,25 @@ function App() {
     }
   };
 
-  // with Drive-Backend
   const handleCreateFile = async (parentId, fileName, isFolder = false) => {
-    // parentId（父文件夹的ID）
-    // fileName（要创建的文件或文件夹的名称）
-    // 可选的布尔值isFolder，默认为false，表示是否创建的是文件夹
     try {
       const response = await cloudDriveApi.createFile({ parentId, name: fileName, type: isFolder ? 'folder' : 'file' });
       const newFile = response.data.file;
       
-      setFileSystem(prevFileSystem => { // 更新应用程序的文件系统状态
-        const addFileToSystem = (files) => { // 递归地遍历文件系统树，并在适当的位置添加新创建的文件或文件夹
+      setFileSystem(prevFileSystem => {
+        const addFileToSystem = (files) => {
           if (parentId === 'root') {
-            // parentId是'root'，则直接在文件列表末尾添加newFile
-            return [...files, newFile]; 
+            return [...files, newFile];
           }
           return files.map(file => {
-            // files.map()函数遍历当前文件系统中的所有文件和文件夹，目的是：找到正确的父节点并把新创建的文件或文件夹添加到其子节点列表中
-            if (file.id === parentId) { 
-              // 每一个file，代码检查其id是否与parentId相匹配。parentId是新创建的文件或文件夹应该被添加到的父文件夹的ID
+            if (file.id === parentId) {
               return {
                 ...file,
                 children: [...(file.children || []), newFile]
               };
-            // 如果file.id与parentId匹配，那么file会被替换成一个新的对象，其children属性包含了原有的所有子文件/文件夹和新创建的newFile
             }
-            // 对于每个file，如果它有子节点（即file.children存在），那么需要递归地处理这些子节点
-            if (file.children) { 
-              return { ...file, children: addFileToSystem(file.children) }; // 在文件系统树中正确地向下传递新创建的文件或文件夹
+            if (file.children) {
+              return { ...file, children: addFileToSystem(file.children) };
             }
             return file;
           });
@@ -186,9 +185,7 @@ function App() {
     }
   };
 
-  // with Drive-Backend
   const handleDeleteFile = async (fileId) => {
-    // fileId，这是要删除的文件的ID
     try {
       await cloudDriveApi.deleteFile({ fileId });
       if (selectedFile && selectedFile.id === fileId) {
@@ -196,8 +193,7 @@ function App() {
       }
       
       setFileSystem(prevFileSystem => {
-        const removeFileFromSystem = (files) => { 
-          // 递归地遍历文件系统树，并删除指定的文件
+        const removeFileFromSystem = (files) => {
           return files.filter(file => {
             if (file.id === fileId) {
               return false;

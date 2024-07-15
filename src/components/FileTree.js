@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import { Folder, File, PlusCircle, Trash2, FolderPlus } from 'lucide-react';
 
 const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFileId }) => {
-  const [newItemName, setNewItemName] = useState('');
-  const [expandedFolders, setExpandedFolders] = useState({ root: true });
-  const [showNewItemInput, setShowNewItemInput] = useState({});
+  const [newItemName, setNewItemName] = useState(''); // 存储新创建的文件或文件夹的名称
+  const [expandedFolders, setExpandedFolders] = useState({ root: true }); // 存储已展开的文件夹的状态，默认情况下根文件夹是展开的
+  const [showNewItemInput, setShowNewItemInput] = useState({ root: true }); // 默认显示根节点的新建输入框
 
-  const toggleFolder = (id) => {
+  const toggleFolder = (id) => { // 切换文件夹的展开/折叠状态
     setExpandedFolders(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
   const handleCreateItem = (parentId, isFolder = false) => {
+    // 处理新文件或文件夹的创建: 它接收父节点的 parentId 和一个布尔值 isFolder 表示是否创建文件夹
     if (newItemName.trim()) {
       onCreateFile(parentId, newItemName.trim(), isFolder);
       setNewItemName('');
@@ -19,12 +20,15 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
   };
 
   const handleKeyPress = (e, parentId, isFolder = false) => {
+    // 处理输入框的键盘事件。当用户按下 Enter 键时，调用 handleCreateItem 函数创建新项目
     if (e.key === 'Enter') {
       handleCreateItem(parentId, isFolder);
     }
   };
 
   const renderNewItemInput = (parentId) => (
+    // 渲染新建项目的输入框
+    // 输入框允许用户输入新项目的名称，并提供两个按钮：创建file / 创建folder
     <div className="flex items-center mb-2">
       <input
         type="text"
@@ -50,6 +54,19 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
   );
 
   const renderTree = (items, parentId = 'root') => {
+    // 递归地渲染文件和文件夹的层次结构
+    if (items.length === 0 && parentId === 'root') {
+      // 如果根节点没有子项，则显示新建项目的输入框
+      return (
+        <li key="new-item-input" className="py-1">
+          {renderNewItemInput('root')}
+        </li>
+      );
+    }
+
+    // 对于每个项目，检查其类型是文件夹还是文件，并分别渲染相应的内容：
+    // (1) 文件夹，渲染展开/折叠按钮和新建按钮；
+    // (2) 文件，渲染选择和删除按钮
     return items.map((item) => (
       <li key={item.id} className="py-1">
         {item.type === 'folder' ? (

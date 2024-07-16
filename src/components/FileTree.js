@@ -53,15 +53,20 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
     </div>
   );
 
-  const renderTree = (items = [], parentId = 'root') => {
+  const renderTree = (items, parentId = 'root') => {
+    // 递归地渲染文件和文件夹的层次结构
     if (items.length === 0 && parentId === 'root') {
+      // 如果根节点没有子项，则显示新建项目的输入框
       return (
         <li key="new-item-input" className="py-1">
           {renderNewItemInput('root')}
         </li>
       );
     }
-  
+
+    // 对于每个项目，检查其类型是文件夹还是文件，并分别渲染相应的内容：
+    // (1) 文件夹，渲染展开/折叠按钮和新建按钮；
+    // (2) 文件，渲染选择和删除按钮
     return items.map((item) => (
       <li key={item.id} className="py-1">
         {item.type === 'folder' ? (
@@ -120,7 +125,7 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
         )}
       </li>
     ));
-  };  
+  };
 
   return (
     <div className="file-tree">

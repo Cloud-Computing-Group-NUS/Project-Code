@@ -11,6 +11,7 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [aiModifiedContent, setAiModifiedContent] = useState('');
   const [messages, setMessages] = useState([]);
+  const [messageCount, setMessageCount] = useState(0);
 
   useEffect(() => {
     const existingUserId = sessionStorage.getItem('userId');
@@ -74,18 +75,27 @@ function App() {
     }
   }, [selectedFile]);
 
-  const handleSelectFile = (file) => {
-    setSelectedFile(file);
-    setAiModifiedContent('');
+  const handleSelectFile = async (file) => {
+    try {
+      const response = await cloudDriveApi.getFileContent(file.id);
+      setSelectedFile({ ...file, content: response.data.content });
+      setAiModifiedContent('');
+    } catch (error) {
+      console.error('Error fetching file content:', error);
+    }
   };
 
   const handleSendMessage = async (message) => {
     const userId = sessionStorage.getItem('userId');
+    const newMessageCount = messageCount + 1;
+    setMessageCount(newMessageCount);
+
     const newMessage = {
       sender: userId,
       content: message,
       timestamp: new Date().toISOString(),
-      file: selectedFile ? selectedFile.id : null // 只发送文件ID，而不是整个文件对象
+      file: selectedFile ? selectedFile.id : null,
+      messageCount: newMessageCount
     };
     setMessages(prevMessages => [...prevMessages, newMessage]);
 
@@ -105,9 +115,11 @@ function App() {
         sender: userId,
         content: "Please modify this file",
         timestamp: new Date().toISOString(),
-        file: selectedFile ? selectedFile.id : null // 只发送文件ID
+        file: selectedFile ? selectedFile.id : null,
+        messageCount: messageCount + 1
       });
       setAiModifiedContent(response.data.content);
+      setMessageCount(prevCount => prevCount + 1);
     } catch (error) {
       console.error('Error generating modification:', error);
     }
@@ -118,7 +130,7 @@ function App() {
 
     try {
       await transitServerApi.getTrainData({
-        file: selectedFile.id, // 只发送文件ID
+        file: selectedFile.id,
         content: aiModifiedContent
       });
       setSelectedFile(prev => ({ ...prev, content: aiModifiedContent }));

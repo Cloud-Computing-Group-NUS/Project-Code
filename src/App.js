@@ -103,15 +103,20 @@ function App() {
   };
 
   const handleGenerateModification = async () => {
+    if (!selectedFile) return;
+
     try {
       const userId = sessionStorage.getItem('userId');
-      const response = await transitServerApi.getFileContent({
+      const genModifyMessage = {
         sender: userId,
         content: "Please modify this file",
         timestamp: new Date().toISOString(),
-        file: selectedFile ? selectedFile.id : null // 只发送文件ID
-      });
-      setAiModifiedContent(response.data.content);
+        prevFile: selectedFile ? selectedFile.id : null, // 只发送文件ID
+        aiModifiedContent: aiModifiedContent // 发送AI修改后的内容
+      };
+
+      const response = await transitServerApi.getFileContent(genModifyMessage); // 发送请求，建立连接，传递 genModifyMessage 对象，等待响应
+      setAiModifiedContent(response.data.content); // 从响应中提取修改后的内容，并调用 setAiModifiedContent 将其设置为AI修改后的内容
     } catch (error) {
       console.error('Error generating modification:', error);
     }
@@ -121,12 +126,22 @@ function App() {
     if (!selectedFile) return;
 
     try {
-      await transitServerApi.getTrainData({
-        file: selectedFile.id, // 只发送文件ID
-        content: aiModifiedContent
-      });
-      setSelectedFile(prev => ({ ...prev, content: aiModifiedContent }));
-      setAiModifiedContent('');
+      const userId = sessionStorage.getItem('userId');
+
+      const sendModifyMessage = {
+        sender: userId,
+        content: "submit modified file",
+        timestamp: new Date().toISOString(),
+        prevFile: selectedFile ? selectedFile.id : null, // 只发送文件ID
+        aiModifiedContent: aiModifiedContent // 发送AI修改后的内容
+      };
+
+      await transitServerApi.getTrainData(sendModifyMessage);
+
+      setSelectedFile(prev => ({ ...prev, content: aiModifiedContent })); 
+      // setSelectedFile 更新选中文件的内容，将其设置为AI修改后的内容。
+      // 箭头函数=> ，保留文件的其他属性，仅更新 content 属性
+      setAiModifiedContent(''); // 将 aiModifiedContent 清空，重置为初始状态
       
       setFileSystem(prevFileSystem => {
         const updateFileInSystem = (files) => {
@@ -142,6 +157,11 @@ function App() {
         };
         return updateFileInSystem(prevFileSystem);
       });
+      /**
+       * 用 setFileSystem 更新文件系统的状态。
+       * 定义一个名为 updateFileInSystem 的函数，该函数递归地遍历文件系统中的所有文件，并更新与选中文件ID匹配的文件内容。
+       * 如果文件有子文件夹，则递归更新子文件夹中的文件。最终返回更新后的文件系统
+       */
     } catch (error) {
       console.error('Error submitting modification:', error);
     }

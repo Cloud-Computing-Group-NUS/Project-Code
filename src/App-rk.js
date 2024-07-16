@@ -212,7 +212,7 @@ function App() {
     try {
       await cloudDriveApi.deleteFile({ fileId });
       if (selectedFile && selectedFile.id === fileId) {
-        setSelectedFile(null); // 如果删除的文件是当前选中的文件，则将selectedFile状态设置为null，以取消选中该文件
+        setSelectedFile(null);
       }
       
       setFileSystem(prevFileSystem => {
@@ -220,18 +220,16 @@ function App() {
           // 递归地遍历文件系统树，并删除指定的文件
           return files.filter(file => {
             if (file.id === fileId) {
-              return false; // 如果当前文件的 id 等于要删除的 fileId，则返回 false，从而在过滤中移除该文件
+              return false;
             }
             if (file.children) {
               file.children = removeFileFromSystem(file.children);
-              // 如果当前文件有子文件 (file.children)，则递归调用 removeFileFromSystem 处理子文件，确保子文件中也能删除指定的文件
             }
-            return true; // 如果当前文件不是要删除的文件，则返回 true，从而保留该文件
+            return true;
           });
         };
         return removeFileFromSystem(prevFileSystem);
       });
-      
       console.log('File deleted successfully');
     } catch (error) {
       console.error('Error deleting file:', error);

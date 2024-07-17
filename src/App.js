@@ -12,6 +12,7 @@ function App() {
   const [aiModifiedContent, setAiModifiedContent] = useState('');
   const [messages, setMessages] = useState([]);
   const [userId, setUserId] = useState(null);
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
     const existingUserId = sessionStorage.getItem('userId');
@@ -25,32 +26,29 @@ function App() {
 
     fetchInitialFileSystem();
 
-    const socket = io('/ng/cloud-drive-service', {
+    const newSocket = io('/ng/cloud-drive-service', {
       path: '/socket.io'
     });
-    socket.on('fileSystemUpdate', (updatedFileSystem) => {
+    setSocket(newSocket);
+
+    newSocket.on('fileSystemUpdate', (updatedFileSystem) => {
       setFileSystem(updatedFileSystem);
       localStorage.setItem('fileSystem', JSON.stringify(updatedFileSystem));
     });
 
-    window.addEventListener('beforeunload', handleBeforeUnload); // listen "close this session"
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
-      socket.disconnect();
+      newSocket.disconnect();
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, []);
 
   const fetchInitialFileSystem = async () => {
     try {
-      const storedFileSystem = localStorage.getItem('fileSystem');
-      if (storedFileSystem) {
-        setFileSystem(JSON.parse(storedFileSystem));
-      } else {
-        const response = await cloudDriveApi.getInitialFileSystem();
-        setFileSystem(response.data);
-        localStorage.setItem('fileSystem', JSON.stringify(response.data));
-      }
+      const response = await cloudDriveApi.getInitialFileSystem();
+      setFileSystem(response.data);
+      localStorage.setItem('fileSystem', JSON.stringify(response.data));
     } catch (error) {
       console.error('Error fetching initial file system:', error);
     }
@@ -59,6 +57,8 @@ function App() {
   const handleBeforeUnload = (event) => {
     if (userId) {
       transitServerApi.cancel({ user: userId });
+    } else {
+      transitServerApi.cancel({ user: 'User ID is not available'});
     }
     event.preventDefault();
     event.returnValue = '';
@@ -75,13 +75,15 @@ function App() {
         }
       });
       console.log('File saved successfully');
-      setSelectedFile(prevFile => ({ ...prevFile, content }));
+
+      const updatedFile = { ...selectedFile, content };
+      setSelectedFile(updatedFile);
       
       setFileSystem(prevFileSystem => {
         const updateFileInSystem = (files) => {
           return files.map(file => {
             if (file.id === selectedFile.id) {
-              return { ...file, content };
+              return updatedFile;
             }
             if (file.children) {
               return { ...file, children: updateFileInSystem(file.children) };
@@ -91,12 +93,13 @@ function App() {
         };
         const updatedFileSystem = updateFileInSystem(prevFileSystem);
         localStorage.setItem('fileSystem', JSON.stringify(updatedFileSystem));
+        socket.emit('fileSystemUpdate', updatedFileSystem);
         return updatedFileSystem;
       });
     } catch (error) {
       console.error('Error saving file:', error);
     }
-  }, [selectedFile]);
+  }, [selectedFile, socket]);
 
   const handleSelectFile = async (file) => {
     try {
@@ -161,18 +164,18 @@ function App() {
         prevFile: selectedFile.id,
         aiModifiedContent: aiModifiedContent
       };
-      // content: message,
 
       await transitServerApi.getTrainData(sendModifyMessage);
 
-      setSelectedFile(prev => ({ ...prev, content: aiModifiedContent }));
+      const updatedFile = { ...selectedFile, content: aiModifiedContent };
+      setSelectedFile(updatedFile);
       setAiModifiedContent('');
       
       setFileSystem(prevFileSystem => {
         const updateFileInSystem = (files) => {
           return files.map(file => {
             if (file.id === selectedFile.id) {
-              return { ...file, content: aiModifiedContent };
+              return updatedFile;
             }
             if (file.children) {
               return { ...file, children: updateFileInSystem(file.children) };
@@ -182,6 +185,7 @@ function App() {
         };
         const updatedFileSystem = updateFileInSystem(prevFileSystem);
         localStorage.setItem('fileSystem', JSON.stringify(updatedFileSystem));
+        socket.emit('fileSystemUpdate', updatedFileSystem);
         return updatedFileSystem;
       });
     } catch (error) {
@@ -214,6 +218,7 @@ function App() {
         };
         const updatedFileSystem = addFileToSystem(prevFileSystem);
         localStorage.setItem('fileSystem', JSON.stringify(updatedFileSystem));
+        socket.emit('fileSystemUpdate', updatedFileSystem);
         return updatedFileSystem;
       });
     } catch (error) {
@@ -242,6 +247,7 @@ function App() {
         };
         const updatedFileSystem = removeFileFromSystem(prevFileSystem);
         localStorage.setItem('fileSystem', JSON.stringify(updatedFileSystem));
+        socket.emit('fileSystemUpdate', updatedFileSystem);
         return updatedFileSystem;
       });
       

@@ -8,7 +8,7 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
     const stored = localStorage.getItem('expandedFolders');
     return stored ? JSON.parse(stored) : { root: true };
   });
-  const [showNewItemInput, setShowNewItemInput] = useState({ root: true });
+  const [showNewItemInput, setShowNewItemInput] = useState({ root: false });
 
   const toggleFolder = (id) => {
     setExpandedFolders(prev => {
@@ -58,77 +58,84 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
     </div>
   );
 
-  const renderTree = (items, parentId = 'root') => {
-    if (items.length === 0 && parentId === 'root') {
-      return (
-        <li key="new-item-input" className="py-1">
-          {renderNewItemInput('root')}
-        </li>
-      );
-    }
-
-    return items.map((item) => (
-      <li key={item.id} className="py-1">
-        {item.type === 'folder' ? (
-          <div>
-            <div className="flex items-center">
+  const renderTree = (items, parentId = 'root') => (
+    items.length === 0 && parentId === 'root' ? (
+      <li key="new-item-input" className="py-1">
+        {renderNewItemInput('root')}
+      </li>
+    ) : (
+      items.map((item) => (
+        <li key={item.id} className="py-1">
+          {item.type === 'folder' ? (
+            <div>
+              <div className="flex items-center">
+                <div 
+                  className="flex items-center cursor-pointer flex-grow" 
+                  onClick={() => toggleFolder(item.id)}
+                >
+                  <Folder size={16} className="mr-2 text-yellow-500" />
+                  <span className="text-gray-800">{item.name}</span>
+                </div>
+                <button
+                  onClick={() => setShowNewItemInput(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                  className="p-1 text-green-500 rounded hover:bg-green-100 transition duration-300 mr-1"
+                >
+                  <PlusCircle size={16} />
+                </button>
+                {parentId !== 'root' && (
+                  <button
+                    onClick={() => onDeleteFile(item.id)}
+                    className="p-1 text-red-500 rounded hover:bg-red-100 transition duration-300"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+              </div>
+              {expandedFolders[item.id] && (
+                <div className="ml-4 mt-2">
+                  {showNewItemInput[item.id] && renderNewItemInput(item.id)}
+                  <ul className="pl-4">
+                    {item.children && item.children.length > 0 
+                      ? renderTree(item.children, item.id)
+                      : <li className="text-gray-500 italic">Empty folder</li>
+                    }
+                  </ul>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className={`flex items-center ${selectedFileId === item.id ? 'bg-blue-100' : ''}`}>
               <div 
-                className="flex items-center cursor-pointer flex-grow" 
-                onClick={() => toggleFolder(item.id)}
+                className="flex items-center cursor-pointer flex-grow p-1 rounded"
+                onClick={() => onSelectFile(item)}
               >
-                <Folder size={16} className="mr-2 text-yellow-500" />
+                <File size={16} className="mr-2 text-blue-500" />
                 <span className="text-gray-800">{item.name}</span>
               </div>
               <button
-                onClick={() => setShowNewItemInput(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                className="p-1 text-green-500 rounded hover:bg-green-100 transition duration-300 mr-1"
+                onClick={() => onDeleteFile(item.id)}
+                className="p-1 text-red-500 rounded hover:bg-red-100 transition duration-300"
               >
-                <PlusCircle size={16} />
+                <Trash2 size={16} />
               </button>
-              {parentId !== 'root' && (
-                <button
-                  onClick={() => onDeleteFile(item.id)}
-                  className="p-1 text-red-500 rounded hover:bg-red-100 transition duration-300"
-                >
-                  <Trash2 size={16} />
-                </button>
-              )}
             </div>
-            {expandedFolders[item.id] && (
-              <div className="ml-4 mt-2">
-                {showNewItemInput[item.id] && renderNewItemInput(item.id)}
-                <ul className="pl-4">
-                  {item.children && item.children.length > 0 
-                    ? renderTree(item.children, item.id)
-                    : <li className="text-gray-500 italic">Empty folder</li>
-                  }
-                </ul>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className={`flex items-center ${selectedFileId === item.id ? 'bg-blue-100' : ''}`}>
-            <div 
-              className="flex items-center cursor-pointer flex-grow p-1 rounded"
-              onClick={() => onSelectFile(item)}
-            >
-              <File size={16} className="mr-2 text-blue-500" />
-              <span className="text-gray-800">{item.name}</span>
-            </div>
-            <button
-              onClick={() => onDeleteFile(item.id)}
-              className="p-1 text-red-500 rounded hover:bg-red-100 transition duration-300"
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
-        )}
-      </li>
-    ));
-  };
+          )}
+        </li>
+      ))
+    )
+  );
 
   return (
     <div className="file-tree">
+      <div className="flex items-center mb-2">
+        <button
+          onClick={() => setShowNewItemInput(prev => ({ ...prev, root: !prev.root }))}
+          className="p-1 text-green-500 rounded hover:bg-green-100 transition duration-300 mr-1"
+        >
+          <PlusCircle size={16} />
+        </button>
+        {showNewItemInput.root && renderNewItemInput('root')}
+      </div>
       <ul className="pl-4">
         {renderTree(files)}
       </ul>

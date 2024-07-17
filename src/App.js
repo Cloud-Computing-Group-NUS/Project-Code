@@ -33,7 +33,7 @@ function App() {
       localStorage.setItem('fileSystem', JSON.stringify(updatedFileSystem));
     });
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('beforeunload', handleBeforeUnload); // listen "close this session"
 
     return () => {
       socket.disconnect();

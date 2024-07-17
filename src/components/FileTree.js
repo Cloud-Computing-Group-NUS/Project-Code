@@ -207,12 +207,14 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
   );
 
   const renderTree = (items, parentId = 'root') => {
-    if (items.length === 0 && parentId === 'root') {
+    // items: 文件和文件夹(FileSystem)的数组
+    // parentId: 父节点的 ID，默认为 root
+    if (items.length === 0 && parentId === 'root') { // 文件系统初始化 (Drive is empty) -> initialFileSystem()
       return (
         <li key="new-item-input" className="py-1">
           {renderNewItemInput('root')}
         </li>
-      );
+      ); // 包含新建项输入框的列表项
     }
 
     return items.map((item) => (
@@ -233,7 +235,8 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
               >
                 <PlusCircle size={16} />
               </button>
-              {parentId !== 'root' && (
+              {/* {parentId !== 'root' && ( */}
+              {(
                 <button
                   onClick={() => {
                     const updatedFiles = handleDeleteItem(item.id, files);

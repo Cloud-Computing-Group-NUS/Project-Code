@@ -31,17 +31,6 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
     }
   };
 
-  const handleDeleteItem = (id, items) => {
-    return items.filter(item => {
-      if (item.id === id) {
-        return false;
-      } else if (item.children) {
-        item.children = handleDeleteItem(id, item.children);
-      }
-      return true;
-    });
-  };
-
   const renderNewItemInput = (parentId) => (
     <div className="flex items-center mb-2">
       <input
@@ -68,14 +57,12 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
   );
 
   const renderTree = (items, parentId = 'root') => {
-    // items: 文件和文件夹(FileSystem)的数组
-    // parentId: 父节点的 ID，默认为 root
-    if (items.length === 0 && parentId === 'root') { // 文件系统初始化 (Drive is empty) -> initialFileSystem()
+    if (items.length === 0 && parentId === 'root') {
       return (
         <li key="new-item-input" className="py-1">
           {renderNewItemInput('root')}
         </li>
-      ); // 包含新建项输入框的列表项
+      );
     }
 
     return items.map((item) => (
@@ -96,18 +83,12 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
               >
                 <PlusCircle size={16} />
               </button>
-              {/* {parentId !== 'root' && ( */}
-              {(
-                <button
-                  onClick={() => {
-                    const updatedFiles = handleDeleteItem(item.id, files);
-                    onDeleteFile(item.id); // triggers the actual delete logic on the parent component
-                  }}
-                  className="p-1 text-red-500 rounded hover:bg-red-100 transition duration-300"
-                >
-                  <Trash2 size={16} />
-                </button>
-              )}
+              <button
+                onClick={() => onDeleteFile(item.id)}
+                className="p-1 text-red-500 rounded hover:bg-red-100 transition duration-300"
+              >
+                <Trash2 size={16} />
+              </button>
             </div>
             {expandedFolders[item.id] && (
               <div className="ml-4 mt-2">

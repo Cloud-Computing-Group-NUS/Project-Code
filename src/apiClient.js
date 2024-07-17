@@ -16,4 +16,5 @@ export const cloudDriveApi = {
   saveFile: (data) => apiClient.post('/cloud-drive-service/api/saveFile', data),
   createFile: (data) => apiClient.post('/cloud-drive-service/api/createFile', data),
   deleteFile: (data) => apiClient.post('/cloud-drive-service/api/deleteFile', data),
+  getFileContent: (fileId) => apiClient.get(`/cloud-drive-service/api/getFileContent?fileId=${fileId}`),
 };

@@ -11,12 +11,16 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [aiModifiedContent, setAiModifiedContent] = useState('');
   const [messages, setMessages] = useState([]);
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     const existingUserId = sessionStorage.getItem('userId');
-    if (!existingUserId) {
+    if (existingUserId) {
+      setUserId(existingUserId);
+    } else {
       const newUserId = `user_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
-      sessionStorage.setItem('userId', newUserId);  
+      sessionStorage.setItem('userId', newUserId);
+      setUserId(newUserId);
     }
 
     fetchInitialFileSystem();
@@ -26,7 +30,6 @@ function App() {
     });
     socket.on('fileSystemUpdate', (updatedFileSystem) => {
       setFileSystem(updatedFileSystem);
-      // Persist the updated file system to local storage
       localStorage.setItem('fileSystem', JSON.stringify(updatedFileSystem));
     });
 
@@ -37,15 +40,12 @@ function App() {
 
   const fetchInitialFileSystem = async () => {
     try {
-      // First, try to load the file system from local storage
       const storedFileSystem = localStorage.getItem('fileSystem');
       if (storedFileSystem) {
         setFileSystem(JSON.parse(storedFileSystem));
       } else {
-        // If not available in local storage, fetch from the server
         const response = await cloudDriveApi.getInitialFileSystem();
         setFileSystem(response.data);
-        // Store the fetched file system in local storage
         localStorage.setItem('fileSystem', JSON.stringify(response.data));
       }
     } catch (error) {
@@ -79,7 +79,6 @@ function App() {
           });
         };
         const updatedFileSystem = updateFileInSystem(prevFileSystem);
-        // Persist the updated file system to local storage
         localStorage.setItem('fileSystem', JSON.stringify(updatedFileSystem));
         return updatedFileSystem;
       });
@@ -88,13 +87,23 @@ function App() {
     }
   }, [selectedFile]);
 
-  const handleSelectFile = (file) => {
-    setSelectedFile(file);
-    setAiModifiedContent('');
+  const handleSelectFile = async (file) => {
+    try {
+      const response = await cloudDriveApi.getFileContent(file.id);
+      const fileWithContent = { ...file, content: response.data.content };
+      setSelectedFile(fileWithContent);
+      setAiModifiedContent('');
+    } catch (error) {
+      console.error('Error fetching file content:', error);
+    }
   };
 
   const handleSendMessage = async (message) => {
-    const userId = sessionStorage.getItem('userId');
+    if (!userId) {
+      console.error('User ID is not set');
+      return;
+    }
+
     const newMessage = {
       sender: userId,
       content: message,
@@ -104,7 +113,10 @@ function App() {
     setMessages(prevMessages => [...prevMessages, newMessage]);
 
     try {
-      const response = await transitServerApi.getChatContent(newMessage);
+      const response = await transitServerApi.getChatContent({
+        user: userId,
+        message: newMessage
+      });
       setMessages(prevMessages => [...prevMessages, { sender: 'ai', content: response.data.content }]);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -113,15 +125,14 @@ function App() {
   };
 
   const handleGenerateModification = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || !userId) return;
 
     try {
-      const userId = sessionStorage.getItem('userId');
       const genModifyMessage = {
-        sender: userId,
+        user: userId,
         content: "Please modify this file",
         timestamp: new Date().toISOString(),
-        prevFile: selectedFile ? selectedFile.id : null,
+        prevFile: selectedFile.id,
         aiModifiedContent: aiModifiedContent
       };
 
@@ -133,16 +144,14 @@ function App() {
   };
 
   const handleSubmitModification = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || !userId) return;
 
     try {
-      const userId = sessionStorage.getItem('userId');
-
       const sendModifyMessage = {
-        sender: userId,
+        user: userId,
         content: "submit modified file",
         timestamp: new Date().toISOString(),
-        prevFile: selectedFile ? selectedFile.id : null,
+        prevFile: selectedFile.id,
         aiModifiedContent: aiModifiedContent
       };
 
@@ -164,7 +173,6 @@ function App() {
           });
         };
         const updatedFileSystem = updateFileInSystem(prevFileSystem);
-        // Persist the updated file system to local storage
         localStorage.setItem('fileSystem', JSON.stringify(updatedFileSystem));
         return updatedFileSystem;
       });
@@ -197,7 +205,6 @@ function App() {
           });
         };
         const updatedFileSystem = addFileToSystem(prevFileSystem);
-        // Persist the updated file system to local storage
         localStorage.setItem('fileSystem', JSON.stringify(updatedFileSystem));
         return updatedFileSystem;
       });
@@ -226,7 +233,6 @@ function App() {
           });
         };
         const updatedFileSystem = removeFileFromSystem(prevFileSystem);
-        // Persist the updated file system to local storage
         localStorage.setItem('fileSystem', JSON.stringify(updatedFileSystem));
         return updatedFileSystem;
       });

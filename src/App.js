@@ -7,49 +7,46 @@ import ChatBox from './components/ChatBox';
 import { transitServerApi, cloudDriveApi } from './apiClient';
 
 function App() {
-  const [fileSystem, setFileSystem] = useState([]); // FileSystem (object) Array
-  const [selectedFile, setSelectedFile] = useState(null); // SelectedFile (object) Array
-  const [aiModifiedContent, setAiModifiedContent] = useState(''); // AI-modified content (content) Array
-  const [messages, setMessages] = useState([]); // MessageHistory (content) Array
-  const [userId, setUserId] = useState(null); // SessionUser-ID (string) Array
+  const [fileSystem, setFileSystem] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [aiModifiedContent, setAiModifiedContent] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     const existingUserId = sessionStorage.getItem('userId');
     if (existingUserId) {
-      // maintain the UserID 
-      setUserId(existingUserId); // Array.append()
+      setUserId(existingUserId);
     } else {
-      // generate a new UserID for this session
       const newUserId = `user_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
       sessionStorage.setItem('userId', newUserId);
-      setUserId(newUserId); // Array.append()
+      setUserId(newUserId);
     }
 
-    // get FileSystem Object from Drive initially
-    fetchInitialFileSystem(); // async opt
+    fetchInitialFileSystem();
 
     const socket = io('/ng/cloud-drive-service', {
       path: '/socket.io'
-    }); // WebSocket -> service node (Drive Backend), path = ...
-    socket.on('fileSystemUpdate', (updatedFileSystem) => { // listen Update-Event
-      setFileSystem(updatedFileSystem); // -> UpdatedFileSystem
-      localStorage.setItem('fileSystem', JSON.stringify(updatedFileSystem)); // store in localStorage
     });
+    socket.on('fileSystemUpdate', (updatedFileSystem) => {
+      setFileSystem(updatedFileSystem);
+      localStorage.setItem('fileSystem', JSON.stringify(updatedFileSystem));
+    });
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
       socket.disconnect();
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, []);
 
-  // with Drive-Backend
   const fetchInitialFileSystem = async () => {
     try {
-      const storedFileSystem = localStorage.getItem('fileSystem'); // get fileSystem data from the browser's localStorage
+      const storedFileSystem = localStorage.getItem('fileSystem');
       if (storedFileSystem) {
-        // if stored, return to FileSystem at once
-        setFileSystem(JSON.parse(storedFileSystem)); 
+        setFileSystem(JSON.parse(storedFileSystem));
       } else {
-        // else get FileSystem from Drive Backend
         const response = await cloudDriveApi.getInitialFileSystem();
         setFileSystem(response.data);
         localStorage.setItem('fileSystem', JSON.stringify(response.data));
@@ -58,11 +55,14 @@ function App() {
       console.error('Error fetching initial file system:', error);
     }
   };
-  /**
-   * Tips:
-   * - Use localStorage.getItem('fileSystem') to try to get fileSystem data from the browser's localStorage. 
-   * - localStorage is a persistent storage area, and the data will be retained even after the browser is closed.
-   */
+
+  const handleBeforeUnload = (event) => {
+    if (userId) {
+      transitServerApi.cancel({ user: userId });
+    }
+    event.preventDefault();
+    event.returnValue = '';
+  };
 
   const handleSaveContent = useCallback(async (content) => {
     if (!selectedFile) return;

@@ -124,10 +124,7 @@ function App() {
     setMessages(prevMessages => [...prevMessages, newMessage]);
 
     try {
-      const response = await transitServerApi.getChatContent({
-        user: userId,
-        message: newMessage
-      });
+      const response = await transitServerApi.getChatContent(newMessage);
       setMessages(prevMessages => [...prevMessages, { user: 'ai', content: response.data.content }]);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -141,10 +138,9 @@ function App() {
     try {
       const genModifyMessage = {
         user: userId,
-        content: "Please modify this file",
         timestamp: new Date().toISOString(),
-        prevFile: selectedFile.id,
-        aiModifiedContent: aiModifiedContent
+        file: selectedFile.id,
+        content: aiModifiedContent
       };
 
       const response = await transitServerApi.getFileContent(genModifyMessage);
@@ -165,6 +161,7 @@ function App() {
         prevFile: selectedFile.id,
         aiModifiedContent: aiModifiedContent
       };
+      // content: message,
 
       await transitServerApi.getTrainData(sendModifyMessage);
 

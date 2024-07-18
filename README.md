@@ -48,7 +48,7 @@ __Main Function__
 
 ## 2. Quick Start
 
-You can visit [here]() to explore this App
+You can visit [here]() to explore this App (updated on 18/07/2024)
 
 ## 3. Environment Setup
 
@@ -66,9 +66,9 @@ List all the prerequisites needed to set up the environment.
 
 ### 3.2 Installation
 
-#### 3.2.1 Local Deployment WebUI
+> Tips: Actually, this part (3.2) is not necessary if you just want to experience our App rather than deploying it.
 
-> Tips: Actually, this part (2.2.1) is not necessary if you just want to experience our App rather than deploying it
+#### 3.2.1 Local Deployment WebUI
 
 **Step 1**: Clone and Checkout
 
@@ -104,31 +104,109 @@ Click the localhost and then you will get the UI in your browser:
 
 ![1721289370502](image/README/1721289370502.png)
 
-#### 3.2.2 Local Deployment WebUI
+#### 3.2.2 AI Agent Deployment
 
+**Obtain API Key**
 
+To obtain an API key, you need to sign up for an OpenAI account and log in to [OpenAI platform](https://platform.openai.com/api-keys).
 
-#### 3.2.3 Local Deployment WebUI
+To use `assistant` and `finetune`, you may need to top up some money (like 5 dollars) in advance through a foreign credit card (American credit card works for me).
 
+**Dockerize the application**
 
+You can either build a docker file locally or pull the image from our docker hub. For the first option, you can run the following command:
+
+```bash
+cd ai_agent
+docker build -t <your dockerhub name>/ai-agent .
+docker push <your dockerhub name>/ai-agent
+```
+
+Then change image name in   `ai-deployment.yaml` to `<your dockerhub name>/ai-agent`.
+
+For the second, no additional steps are needed.
+
+__Modify the secrets__
+
+In this part, we've used a k8s object `secret` to protect our API key. First run the following command to encode your API key:
+
+```bash
+echo -n "<your_api_key>`" | base64
+```
+
+for example:
+
+```bash
+echo -n "sk-1234567890" | base64
+```
+
+Then replace the value of `api-key` in `ai-secrets.yaml` with the output of the above command.
+
+**Deploy the application**
+
+After connecting to the cloud and forms a cluster, you can run the following code to build the application:
+
+```bash
+cd ai_agent/
+kubectl apply -f ai-secrets.yaml
+kubectl apply -f ai-deployment.yaml
+kubectl apply -f ai-service.yaml
+```
+
+#### 3.2.3 AI Finetune Deployment
+
+**Obtain API Key**
+
+ Follow instructions from AI-agent. finetune has been bound to the same secret from `ai_finetune_deployment.yaml`
+
+**Dockerize the application**
+
+You can either build a docker file locally or pull the image from our docker hub. For the first option, you can run the following command:
+
+```bash
+cd finetune
+docker build -t <your dockerhub name>/finetune .
+docker push <your dockerhub name>/finetune
+```
+
+Then change image name in   `ai_finetune_deployment.yaml` to `<your dockerhub name>/finetune`.
+
+For the second, no additional steps are needed.
+
+**Deploy the application**
+
+After connecting to the cloud and forms a cluster, you can run the following code to build the application:
+
+```bash
+cd finetune/
+kubectl apply -f ai_finetune_deployment.yaml
+kubectl apply -f ai_finetune_service.yaml
+kubectl apply -f ai_finetune_pvc.yaml
+kubectl apply -f ai_finetune_pv.yaml
+```
+
+Note that finetune is rather costly.
 
 #### 3.2.4 Local Deployment WebUI
 
-
-
 ## 4. Application Deployment
 
-Here are detailed information concerning application deployment.
+Here are brief information concerning application deployment. You can get detailed steps in __3. Environment Setup__
 
 If you just want to experience our App rather than deploying it, please jump to __2. Quick Start__
 
-1. **Step 1**: Description and command.
+**- Step 1**: WebUI Deployment
 
-   ```bash
-   command_to_run
-   ```
-2. **Step 2**: Description and command.
+    - Get source code
 
-   ```bash
-   command_to_run
-   ```
+    - Initialization
+
+    - Run the web page
+
+**- Step 2**: AI System (AI Agent / AI Finetune)
+
+    - Obtain API Key
+
+    - Dockerize the application
+
+    - Deploy the application

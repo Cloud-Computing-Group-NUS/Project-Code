@@ -19,7 +19,7 @@ We are DATA @ Summer Workshop, NUS.
 
 ### 1.1 Project Description
 
-This system is an AI-assisted document editor based on Kubernetes, integrating multiple components such as a frontend interface, backend processing, data preprocessing, message queue, data storage, knowledge base generation, and AI interaction. 
+This system is an AI-assisted document editor based on Kubernetes, integrating multiple components such as a frontend interface, backend processing, data preprocessing, message queue, data storage, knowledge base generation, and AI interaction.
 
 The whole system is designed with scalability, high availability, and efficient data processing in mind, aiming to provide a smooth and intelligent document editing experience.
 
@@ -27,7 +27,7 @@ It leverages LLM to improve user development efficiency and fully collects and u
 
 ### 1.2 System Architecture
 
-![1721286190834](image/1/1721286190834.png)
+![1721286190834](image/total/1721286190834.png)
 
 __Main Function__
 

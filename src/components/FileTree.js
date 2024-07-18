@@ -4,6 +4,7 @@ import { Folder, File, PlusCircle, Trash2, FolderPlus } from 'lucide-react';
 const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFileId }) => {
   const [newItemName, setNewItemName] = useState('');
   const [expandedFolders, setExpandedFolders] = useState({});
+  const [showNewItemInput, setShowNewItemInput] = useState({ root: false });
 
   const toggleFolder = (id, currentDepth) => {
     setExpandedFolders(prev => {
@@ -25,6 +26,7 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
     if (newItemName.trim()) {
       onCreateFile(parentId, newItemName.trim(), isFolder);
       setNewItemName('');
+      setShowNewItemInput(prev => ({ ...prev, [parentId]: false }));
     }
   };
 
@@ -117,6 +119,16 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
       <ul className="pl-4">
         {renderTree(files, 'root', 0)}
       </ul>
+      {showNewItemInput.root && renderNewItemInput('root')}
+      {files.length === 0 && !showNewItemInput.root && (
+        <button
+          onClick={() => setShowNewItemInput(prev => ({ ...prev, root: true }))}
+          className="p-2 bg-green-500 text-white rounded-md flex items-center mt-2 transition duration-300 ease-in-out hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+        >
+          <PlusCircle size={16} className="mr-1" />
+          Add New Item
+        </button>
+      )}
     </div>
   );
 };

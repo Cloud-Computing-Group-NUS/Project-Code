@@ -13,7 +13,7 @@ We are DATA @ Summer Workshop, NUS.
 - Student 1: Boxuan Hu, t0933356.
 - Student 2: Xiliang Xian, t0933753.
 - Student 3: Xinyuan Xia, t0933528.
-- Student 4: Shuyang Zhou, .
+- Student 4: Shuyang Zhou, t0933418.
 
 ## 1. Project Overview
 

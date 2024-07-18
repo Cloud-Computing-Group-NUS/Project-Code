@@ -7,7 +7,7 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
     const stored = localStorage.getItem('expandedFolders');
     return stored ? JSON.parse(stored) : { root: true };
   });
-  const [showNewItemInput, setShowNewItemInput] = useState({ root: true });
+  const [showNewItemInput, setShowNewItemInput] = useState({ root: false });
 
   const toggleFolder = (id) => {
     setExpandedFolders(prev => {
@@ -57,14 +57,6 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
   );
 
   const renderTree = (items, parentId = 'root') => {
-    if (items.length === 0 && parentId === 'root') {
-      return (
-        <li key="new-item-input" className="py-1">
-          {renderNewItemInput('root')}
-        </li>
-      );
-    }
-
     return items.map((item) => (
       <li key={item.id} className="py-1">
         {item.type === 'folder' ? (
@@ -128,6 +120,16 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
       <ul className="pl-4">
         {renderTree(files)}
       </ul>
+      {showNewItemInput.root && renderNewItemInput('root')}
+      {!showNewItemInput.root && (
+        <button
+          onClick={() => setShowNewItemInput(prev => ({ ...prev, root: true }))}
+          className="mt-2 p-1 text-green-500 rounded hover:bg-green-100 transition duration-300"
+        >
+          <PlusCircle size={16} />
+          <span className="ml-1">Add to root</span>
+        </button>
+      )}
     </div>
   );
 };

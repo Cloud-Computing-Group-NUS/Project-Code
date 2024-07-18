@@ -45,7 +45,7 @@ Click the localhost and then you will get the UI in your browser
 
 ### UI
 
-![WebUI](image/README/WebUI.png)
+![1721287992844](image/web/1721287992844.png)
 
 ## Cloud Deployment
 

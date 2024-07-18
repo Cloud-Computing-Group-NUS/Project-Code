@@ -3,16 +3,20 @@ import { Folder, File, PlusCircle, Trash2, FolderPlus } from 'lucide-react';
 
 const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFileId }) => {
   const [newItemName, setNewItemName] = useState('');
-  const [expandedFolders, setExpandedFolders] = useState(() => {
-    const stored = localStorage.getItem('expandedFolders');
-    return stored ? JSON.parse(stored) : { root: true };
-  });
-  const [showNewItemInput, setShowNewItemInput] = useState({ root: false });
+  const [expandedFolders, setExpandedFolders] = useState({});
 
-  const toggleFolder = (id) => {
+  const toggleFolder = (id, currentDepth) => {
     setExpandedFolders(prev => {
       const updated = { ...prev, [id]: !prev[id] };
-      localStorage.setItem('expandedFolders', JSON.stringify(updated));
+      // Collapse all folders except the clicked one and its children up to depth + 1
+      Object.keys(updated).forEach(key => {
+        if (key !== id && key.startsWith(id + '/') && prev[key]) {
+          const depthDiff = key.split('/').length - id.split('/').length;
+          if (depthDiff > 1) {
+            updated[key] = false;
+          }
+        }
+      });
       return updated;
     });
   };
@@ -21,7 +25,6 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
     if (newItemName.trim()) {
       onCreateFile(parentId, newItemName.trim(), isFolder);
       setNewItemName('');
-      setShowNewItemInput(prev => ({ ...prev, [parentId]: false }));
     }
   };
 
@@ -56,7 +59,7 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
     </div>
   );
 
-  const renderTree = (items, parentId = 'root', depth = 0) => {
+  const renderTree = (items, parentId = 'root', currentDepth = 0) => {
     return items.map((item) => (
       <li key={item.id} className="py-1">
         {item.type === 'folder' ? (
@@ -64,19 +67,11 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
             <div className="flex items-center">
               <div 
                 className="flex items-center cursor-pointer flex-grow" 
-                onClick={() => toggleFolder(item.id)}
+                onClick={() => toggleFolder(item.id, currentDepth)}
               >
                 <Folder size={16} className="mr-2 text-yellow-500" />
                 <span className="text-gray-800">{item.name}</span>
               </div>
-              {depth < 2 && (
-                <button
-                  onClick={() => setShowNewItemInput(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                  className="p-1 text-green-500 rounded hover:bg-green-100 transition duration-300 mr-1"
-                >
-                  <PlusCircle size={16} />
-                </button>
-              )}
               <button
                 onClick={() => onDeleteFile(item.id)}
                 className="p-1 text-red-500 rounded hover:bg-red-100 transition duration-300"
@@ -84,12 +79,12 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
                 <Trash2 size={16} />
               </button>
             </div>
-            {expandedFolders[item.id] && depth < 2 && (
+            {expandedFolders[item.id] && (
               <div className="ml-4 mt-2">
-                {showNewItemInput[item.id] && renderNewItemInput(item.id)}
+                {renderNewItemInput(item.id)}
                 <ul className="pl-4">
                   {item.children && item.children.length > 0 
-                    ? renderTree(item.children, item.id, depth + 1)
+                    ? renderTree(item.children, item.id, currentDepth + 1)
                     : <li className="text-gray-500 italic">Empty folder</li>
                   }
                 </ul>
@@ -120,18 +115,8 @@ const FileTree = ({ files, onSelectFile, onCreateFile, onDeleteFile, selectedFil
   return (
     <div className="file-tree">
       <ul className="pl-4">
-        {renderTree(files)}
+        {renderTree(files, 'root', 0)}
       </ul>
-      {showNewItemInput.root && renderNewItemInput('root')}
-      {files.length === 0 && !showNewItemInput.root && (
-        <button
-          onClick={() => setShowNewItemInput(prev => ({ ...prev, root: true }))}
-          className="p-2 bg-green-500 text-white rounded-md flex items-center mt-2 transition duration-300 ease-in-out hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-        >
-          <PlusCircle size={16} className="mr-1" />
-          Add New Item
-        </button>
-      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-# AI-Agent
+# AI-Agent System
 
 - This part invokes Openai API to send a message and receive an answer. In particular, it creates an assistant and maintain a thread during the conversation
 - It is supported by [OpenAI](https://openai.com) and [GPT-3](https://openai.com/gpt-3)
@@ -7,7 +7,9 @@
 
 ### Obtain API Key
 
- To obtain an API key, you need to sign up for an OpenAI account and log in to [OpenAI platform](https://platform.openai.com/api-keys). To use `assistant` and `finetune`, you may need to top up some money(like 5 dollars) in advance through a foreign credit card (American credit card works for me).
+To obtain an API key, you need to sign up for an OpenAI account and log in to [OpenAI platform](https://platform.openai.com/api-keys).
+
+To use `assistant` and `finetune`, you may need to top up some money (like 5 dollars) in advance through a foreign credit card (American credit card works for me).
 
 ### Dockerize the application
 
@@ -85,7 +87,6 @@ kubectl apply -f ai_finetune_deployment.yaml
 kubectl apply -f ai_finetune_service.yaml
 kubectl apply -f ai_finetune_pvc.yaml
 kubectl apply -f ai_finetune_pv.yaml
-
 ```
 
 Note that finetune is rather costly.

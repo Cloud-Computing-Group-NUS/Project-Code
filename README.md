@@ -1,17 +1,19 @@
-# AI-Agent System
+# AI System
+
+## AI-Agent
 
 - This part invokes Openai API to send a message and receive an answer. In particular, it creates an assistant and maintain a thread during the conversation
 - It is supported by [OpenAI](https://openai.com) and [GPT-3](https://openai.com/gpt-3)
 
-## Cloud Deployment
+### Cloud Deployment
 
-### Obtain API Key
+#### Obtain API Key
 
 To obtain an API key, you need to sign up for an OpenAI account and log in to [OpenAI platform](https://platform.openai.com/api-keys).
 
 To use `assistant` and `finetune`, you may need to top up some money (like 5 dollars) in advance through a foreign credit card (American credit card works for me).
 
-### Dockerize the application
+#### Dockerize the application
 
 You can either build a docker file locally or pull the image from our docker hub. For the first option, you can run the following command:
 
@@ -25,7 +27,7 @@ Then change image name in   `ai-deployment.yaml` to `<your dockerhub name>/ai-ag
 
 For the second, no additional steps are needed.
 
-### Modify the secrets
+#### Modify the secrets
 
 In this part, we've used a k8s object `secret` to protect our API key. First run the following command to encode your API key:
 
@@ -41,7 +43,7 @@ echo -n "sk-1234567890" | base64
 
 Then replace the value of `api-key` in `ai-secrets.yaml` with the output of the above command.
 
-### Deploy the application
+#### Deploy the application
 
 After connecting to the cloud and forms a cluster, you can run the following code to build the application:
 

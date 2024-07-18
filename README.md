@@ -195,18 +195,13 @@ Here are brief information concerning application deployment. You can get detail
 
 If you just want to experience our App rather than deploying it, please jump to __2. Quick Start__
 
-**- Step 1**: WebUI Deployment
+- WebUI Deployment
 
-    - Get source code
+  - Get source code
+  - Initialization
+  - Run the web page
+- AI System (AI Agent / AI Finetune)
 
-    - Initialization
-
-    - Run the web page
-
-**- Step 2**: AI System (AI Agent / AI Finetune)
-
-    - Obtain API Key
-
-    - Dockerize the application
-
-    - Deploy the application
+  - Obtain API Key
+  - Dockerize the application
+  - Deploy the application

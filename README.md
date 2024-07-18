@@ -1,134 +1,91 @@
-# IntelliDoc
+# AI-Agent
 
-> Cloud-native AI-assisted Multi-person Real-time Collaboration Document System Based On K8s
+- This part invokes Openai API to send a message and receive an answer. In particular, it creates an assistant and maintain a thread during the conversation
+- It is supported by [OpenAI](https://openai.com) and [GPT-3](https://openai.com/gpt-3)
 
-__Team Number__: SWS-3004, Group 6
+## Cloud Deployment
 
-__Team Member__:
+### Obtain API Key
 
-We are DATA @ Summer Workshop, NUS.
+ To obtain an API key, you need to sign up for an OpenAI account and log in to [OpenAI platform](https://platform.openai.com/api-keys). To use `assistant` and `finetune`, you may need to top up some money(like 5 dollars) in advance through a foreign credit card (American credit card works for me).
 
-> DATA is a Department of data-Analysis and neTworked Architecting
+### Dockerize the application
 
-- Student 1: Boxuan Hu, t0933356.
-- Student 2: Xiliang Xian, t0933753.
-- Student 3: Xinyuan Xia, t0933528.
-- Student 4: Shuyang Zhou, .
-
-## 1. Project Overview
-
-### 1.1 Project Description
-
-This system is an AI-assisted document editor based on Kubernetes, integrating multiple components such as a frontend interface, backend processing, data preprocessing, message queue, data storage, knowledge base generation, and AI interaction.
-
-The whole system is designed with scalability, high availability, and efficient data processing in mind, aiming to provide a smooth and intelligent document editing experience.
-
-It leverages LLM to improve user development efficiency and fully collects and utilizes various data generated during user development to enhance the accuracy of the dedicated model and enrich its knowledge base.
-
-### 1.2 System Architecture
-
-![1721286190834](image/README/1721286190834.png)
-
-__Main Function__
-
-- AI-assisted document editor based on Kubernetes and Cloud
-- Multiple components for efficient and intelligent document editing
-- Collecting data when using for a project-tailored AI
-
-### 1.3 Key Components
-
-- **Frontend Pod**: User interface for document input and editing.
-- **Preprocessing Pods**: Cleanses and formats input data.
-- **Context Organizer Pod / Cloud Drive**: Formats content for display and interaction.
-- **Message Queue**: Temporary data storage and transmission.
-- **OpenAI Interaction Job**: Uses AI-assistant to handle requests.
-- **Knowledge Base File Generation**: Create structured knowledge files.
-- **MongoDB Database**: Persistent document storage.
-- **Backend API Pod**: Uses correction messages from mongoDB Database to finetune a new model.
-
-## 2. Quick Start
-
-You can visit [here]() to explore this App
-
-## 3. Environment Setup
-
-### 3.1 Prerequisites
-
-List all the prerequisites needed to set up the environment.
-
-- **Node.js**:
-  - Version: v22.4.1
-  - Installation: [node-Installation](https://nodejs.org/zh-cn/download/package-manager/)
-- __React__:
-  - Version: @18.3.1
-  - Installation: [react-Installation](https://react.dev/learn/installation)
-- **Library 1**: Version and installation command.
-
-### 3.2 Installation
-
-#### 3.2.1 Local Deployment WebUI
-
-> Tips: Actually, this part (2.2.1) is not necessary if you just want to experience our App rather than deploying it
-
-**Step 1**: Clone and Checkout
+You can either build a docker file locally or pull the image from our docker hub. For the first option, you can run the following command:
 
 ```bash
-git clone https://github.com/Cloud-Computing-Group-NUS/Project-Code.git
-git checkout Web
+cd ai_agent
+docker build -t <your dockerhub name>/ai-agent .
+docker push <your dockerhub name>/ai-agent
 ```
 
-**Step 2**: Initialization
+Then change image name in   `ai-deployment.yaml` to `<your dockerhub name>/ai-agent`.
+
+For the second, no additional steps are needed.
+
+### Modify the secrets
+
+In this part, we've used a k8s object `secret` to protect our API key. First run the following command to encode your API key:
 
 ```bash
-npm install
-npm start
+echo -n "<your_api_key>`" | base64
 ```
 
-And you will get this:
+for example:
 
 ```bash
-Compiled successfully!
-
-You can now view cloud-drive-app in the browser.
-
-  Local:            http://localhost:3000
-  On Your Network:  http://172.31.34.17:3000
-
-Note that the development build is not optimized.
-To create a production build, use npm run build.
-
-webpack compiled successfully
+echo -n "sk-1234567890" | base64
 ```
 
-Click the localhost and then you will get the UI in your browser:
+Then replace the value of `api-key` in `ai-secrets.yaml` with the output of the above command.
 
-![1721289370502](image/README/1721289370502.png)
+### Deploy the application
 
-#### 3.2.2 Local Deployment WebUI
+After connecting to the cloud and forms a cluster, you can run the following code to build the application:
 
+```bash
+cd ai_agent/
+kubectl apply -f ai-secrets.yaml
+kubectl apply -f ai-deployment.yaml
+kubectl apply -f ai-service.yaml
+```
 
+## AI-finetune
 
-#### 3.2.3 Local Deployment WebUI
+- This part collects data from MongoDB database and uses it to finetune the model. As OpenAI needs to load the file stored in the local disk, we creates PV and PVC and mount it to PV.
+- It is supported by [OpenAI](https://openai.com) and [GPT-3](https://openai.com/gpt-3)
 
+### Cloud Deployment
 
+#### Obtain API Key
 
-#### 3.2.4 Local Deployment WebUI
+ Follow instructions from AI-agent. finetune has been bound to the same secret from `ai_finetune_deployment.yaml`
 
+#### Dockerize the application
 
+You can either build a docker file locally or pull the image from our docker hub. For the first option, you can run the following command:
 
-## 4. Application Deployment
+```bash
+cd finetune
+docker build -t <your dockerhub name>/finetune .
+docker push <your dockerhub name>/finetune
+```
 
-Here are detailed information concerning application deployment.
+Then change image name in   `ai_finetune_deployment.yaml` to `<your dockerhub name>/finetune`.
 
-If you just want to experience our App rather than deploying it, please jump to __2. Quick Start__
+For the second, no additional steps are needed.
 
-1. **Step 1**: Description and command.
+#### Deploy the application
 
-   ```bash
-   command_to_run
-   ```
-2. **Step 2**: Description and command.
+After connecting to the cloud and forms a cluster, you can run the following code to build the application:
 
-   ```bash
-   command_to_run
-   ```
+```bash
+cd finetune/
+kubectl apply -f ai_finetune_deployment.yaml
+kubectl apply -f ai_finetune_service.yaml
+kubectl apply -f ai_finetune_pvc.yaml
+kubectl apply -f ai_finetune_pv.yaml
+
+```
+
+Note that finetune is rather costly.

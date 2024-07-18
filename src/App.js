@@ -5,7 +5,7 @@ import FileTree from './components/FileTree';
 import Editor from './components/Editor';
 import ChatBox from './components/ChatBox';
 import { transitServerApi, cloudDriveApi } from './apiClient';
-import _ from 'lodash';
+import _ from 'lodash'; // 添加 lodash 用于深度复制
 
 function App() {
   const [fileSystem, setFileSystem] = useState([]);
@@ -51,7 +51,7 @@ function App() {
       const initialFileSystem = response.data;
       setFileSystem(initialFileSystem);
       localStorage.setItem('fileSystem', JSON.stringify(initialFileSystem));
-      console.log('Initial file system:', initialFileSystem);
+      console.log('Initial file system:', initialFileSystem); // 调试日志
     } catch (error) {
       console.error('Error fetching initial file system:', error);
     }
@@ -97,7 +97,7 @@ function App() {
         const updatedFileSystem = updateFileInSystem(_.cloneDeep(prevFileSystem));
         localStorage.setItem('fileSystem', JSON.stringify(updatedFileSystem));
         socket.emit('fileSystemUpdate', updatedFileSystem);
-        console.log('Updated file system:', updatedFileSystem);
+        console.log('Updated file system:', updatedFileSystem); // 调试日志
         return updatedFileSystem;
       });
     } catch (error) {
@@ -223,7 +223,7 @@ function App() {
         const updatedFileSystem = addFileToSystem(_.cloneDeep(prevFileSystem));
         localStorage.setItem('fileSystem', JSON.stringify(updatedFileSystem));
         socket.emit('fileSystemUpdate', updatedFileSystem);
-        console.log('File system after creation:', updatedFileSystem);
+        console.log('File system after creation:', updatedFileSystem); // 调试日志
         return updatedFileSystem;
       });
     } catch (error) {
@@ -253,7 +253,7 @@ function App() {
         const updatedFileSystem = removeFileFromSystem(_.cloneDeep(prevFileSystem));
         localStorage.setItem('fileSystem', JSON.stringify(updatedFileSystem));
         socket.emit('fileSystemUpdate', updatedFileSystem);
-        console.log('File system after deletion:', updatedFileSystem);
+        console.log('File system after deletion:', updatedFileSystem); // 调试日志
         return updatedFileSystem;
       });
       

@@ -9,7 +9,7 @@
 
 Your computer needs to be configured with the __node.js__ environment
 
-You can config your system by [config node.js](https://react.dev/learn/installation)
+You can config your system by [node.js installation](https://react.dev/learn/installation)
 
 ### Clone and Checkout
 

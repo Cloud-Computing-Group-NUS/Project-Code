@@ -68,6 +68,40 @@ List all the prerequisites needed to set up the environment.
 
 > Tips: Actually, this part (3.2) is not necessary if you just want to experience our App rather than deploying it.
 
+__Structure__
+
+- main
+  - [README.md](https://github.com/Cloud-Computing-Group-NUS/Project-Code/blob/main/README.md "README.md")
+- AI-system
+  - AI Agent
+    - a
+    - a
+    - a
+  - AI Finetune
+    - b
+    - b
+    - b
+- Kubenetes
+  - c
+  - c
+  - c
+- Drive
+  - d
+  - d
+  - d
+- Web
+  - [README.md](https://github.com/Cloud-Computing-Group-NUS/Project-Code/blob/Web/README.md "README.md")
+  - Local Deployment
+    - [public](https://github.com/Cloud-Computing-Group-NUS/Project-Code/tree/Web/public "public")
+    - [src](https://github.com/Cloud-Computing-Group-NUS/Project-Code/tree/Web/src "src")
+    - [nginx.conf](https://github.com/Cloud-Computing-Group-NUS/Project-Code/blob/Web/nginx.conf "nginx.conf")
+  - Cloud Deployment
+    - [Dockerfile](https://github.com/Cloud-Computing-Group-NUS/Project-Code/blob/Web/Dockerfile "Dockerfile")
+    - [dependencies.txt](https://github.com/Cloud-Computing-Group-NUS/Project-Code/blob/Web/dependencies.txt "dependencies.txt")
+    - [package-lock.json](https://github.com/Cloud-Computing-Group-NUS/Project-Code/blob/Web/package-lock.json "package-lock.json")
+    - [package.json](https://github.com/Cloud-Computing-Group-NUS/Project-Code/blob/Web/package.json "package.json")
+
+
 #### 3.2.1 Local Deployment WebUI
 
 **Step 1**: Clone and Checkout

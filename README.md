@@ -51,4 +51,4 @@ Click the localhost and then you will get the UI in your browser
 
 It's recommended to deploy kubenetes on AWS ([Amazon Web Services](https://aws.amazon.com/free/))
 
-You can follow these steps on [aws-tutorial](https://blog.bxhu2004.com/)
+You can follow these steps on [aws-tutorial](https://blog.bxhu2004.com/LECTURE/AWS-Server/aws-install/)

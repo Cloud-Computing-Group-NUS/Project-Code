@@ -6,6 +6,8 @@ import Editor from './components/Editor';
 import ChatBox from './components/ChatBox';
 import { transitServerApi, cloudDriveApi } from './apiClient';
 
+// "ctrl+r -> refresh and reload" is ok in this version
+
 function App() {
   const [fileSystem, setFileSystem] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);

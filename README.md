@@ -1,9 +1,15 @@
 # Web UI System
 
 - This part corresponds to the Frontend and part of Backend of the entire system
-- This part is supported by [React]()
+- It is supported by [React]()
 
 ## Local Deployment
+
+### Preconditions
+
+Your computer needs to be configured with the __node.js__ environment
+
+You can config your system by [config node.js](https://react.dev/learn/installation)
 
 ### Clone and Checkout
 
@@ -18,8 +24,6 @@ git checkout Web
 npm install
 npm start
 ```
-
-
 
 And you will get this:
 
@@ -37,14 +41,11 @@ To create a production build, use npm run build.
 webpack compiled successfully
 ```
 
-
 Click the localhost and then you will get the UI in your browser
 
 ### UI
 
 ![WebUI](image/README/WebUI.png)
-
-
 
 ## Cloud Deployment
 

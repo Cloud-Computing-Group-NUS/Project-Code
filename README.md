@@ -48,7 +48,7 @@ __Main Function__
 
 ## 2. Quick Start
 
-You can visit [here]() to explore this App (updated on 18/07/2024)
+You can visit [here](http://100.24.7.54:32478/) to explore this App (updated on 18/07/2024)
 
 ## 3. Environment Setup
 

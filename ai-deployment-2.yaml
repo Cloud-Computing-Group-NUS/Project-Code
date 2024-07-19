@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-agent
+  template:
+    metadata:
+      labels:
+        app: ai-agent
+    spec:
+      containers:
+      - name: ai-agent
+        image: xianxiliang/ai-agent9:v1
+        ports:
+        - containerPort: 5000
+        envFrom:
+        - secretRef:
+            name: ai-agent-secret
+      #   volumeMounts:
+      #   - name: data
+      #     mountPath: /app/data
+      # volumes:
+      # - name: data
+      #   persistentVolumeClaim:
+      #     claimName: ai-pvc
+          # claimName: aws-cloud-pvc

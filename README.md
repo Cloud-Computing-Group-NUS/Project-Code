@@ -18,7 +18,7 @@ To use `assistant` and `finetune`, you may need to top up some money (like 5 dol
 You can either build a docker file locally or pull the image from our docker hub. For the first option, you can run the following command:
 
 ```bash
-cd ai_agent
+cd ai-agent
 docker build -t <your dockerhub name>/ai-agent .
 docker push <your dockerhub name>/ai-agent
 ```

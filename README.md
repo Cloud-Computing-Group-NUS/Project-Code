@@ -1,4 +1,4 @@
-# IntelliDo
+# IntelliDoc
 
 > Cloud-native AI-assisted Multi-person Real-time Collaboration Document System Based On K8s
 

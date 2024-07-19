@@ -181,7 +181,7 @@ Then replace the value of `api-key` in `ai-secrets.yaml` with the output of the 
 After connecting to the cloud and forms a cluster, you can run the following code to build the application:
 
 ```bash
-cd ai_agent/
+cd ai-agent/
 kubectl apply -f ai-secrets.yaml
 kubectl apply -f ai-deployment.yaml
 kubectl apply -f ai-service.yaml

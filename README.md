@@ -15,6 +15,12 @@ We are DATA @ Summer Workshop, NUS.
 - Student 3: Xinyuan Xia, t0933528.
 - Student 4: Shuyang Zhou, t0933418.
 
+
+<a href="https://github.com/Cloud-Computing-Group-NUS/Project-Code/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Cloud-Computing-Group-NUS/Project-Code" />
+</a>
+
+
 ## 1. Project Overview
 
 ### 1.1 Project Description
@@ -100,7 +106,6 @@ __Structure__
     - [dependencies.txt](https://github.com/Cloud-Computing-Group-NUS/Project-Code/blob/Web/dependencies.txt "dependencies.txt")
     - [package-lock.json](https://github.com/Cloud-Computing-Group-NUS/Project-Code/blob/Web/package-lock.json "package-lock.json")
     - [package.json](https://github.com/Cloud-Computing-Group-NUS/Project-Code/blob/Web/package.json "package.json")
-
 
 #### 3.2.1 Local Deployment WebUI
 

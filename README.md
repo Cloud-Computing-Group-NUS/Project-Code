@@ -246,7 +246,7 @@ Note that finetune is rather costly.
 
 #### 3.2.4 Cloud Drive Deployment
 
-**Dockerize Cloud Drive **
+**Dockerize Cloud Drive**
 
 You can either build a docker file locally or pull the image from our docker hub. For the first option, you can run the following command:
 

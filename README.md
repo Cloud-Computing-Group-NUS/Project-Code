@@ -82,7 +82,7 @@ List all the prerequisites needed to set up the environment.
 
   - Installation: [Kubectl-Installtion](https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html)
 
-- **Python Library **:
+- **Python Library:**
 
   - ```bash
     pip install -r requirements.txt

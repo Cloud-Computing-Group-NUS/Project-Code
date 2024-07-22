@@ -32,7 +32,7 @@ It leverages LLM to improve user development efficiency and fully collects and u
 
 ### 1.2 System Architecture
 
-![1721286190834](IntelliDoc.assets/1721286190834.png)
+![1721286190834](image/README/1721286190834.png)
 
 __Main Function__
 

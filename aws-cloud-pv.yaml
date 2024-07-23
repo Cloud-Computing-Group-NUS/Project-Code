@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: aws-ebs-pv
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: aws-gp2
+  csi:
+    driver: ebs.csi.aws.com
+    volumeHandle: vol-05a97527ba63ce612  # 替换为您的EBS卷ID
+  # awsElasticBlockStore:
+  #   volumeID: vol-0dbea70799730ff19  # 替换为您的EBS卷ID
+  #   fsType: ext4  # 文件系统类型，根据需要调整

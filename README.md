@@ -1,14 +1,15 @@
-# IntelliDoc
+# AI System
 
-> Cloud-native AI-assisted Multi-person Real-time Collaboration Document System Based On K8s
+## AI-Agent
 
-__Team Number__: SWS-3004, Group 6
+- This part invokes Openai API to send a message and receive an answer. In particular, it creates an assistant and maintain a thread during the conversation
+- It is supported by [OpenAI](https://openai.com) and [GPT-3](https://openai.com/gpt-3)
 
-__Team Member__:
+### Cloud Deployment
 
-We are DATA @ Summer Workshop, NUS.
+#### Obtain API Key
 
-> DATA is a Department of data-Analysis and neTworked Architecting
+To obtain an API key, you need to sign up for an OpenAI account and log in to [OpenAI platform](https://platform.openai.com/api-keys).
 
 - Student 1: Boxuan Hu, t0933356.
 - Student 2: Xiliang Xian, t0933753.
@@ -20,7 +21,7 @@ We are DATA @ Summer Workshop, NUS.
 </a>
 
 
-## 1. Project Overview
+#### Dockerize the application
 
 ### 1.1 Project Description
 
@@ -129,36 +130,32 @@ __Structure__
 **Step 1**: Clone and Checkout
 
 ```bash
-git clone https://github.com/Cloud-Computing-Group-NUS/Project-Code.git
-git checkout Web
+cd ai-agent
+docker build -t <your dockerhub name>/ai-agent .
+docker push <your dockerhub name>/ai-agent
 ```
 
-**Step 2**: Initialization
+Then change image name in   `ai-deployment.yaml` to `<your dockerhub name>/ai-agent`.
+
+For the second, no additional steps are needed.
+
+#### Modify the secrets
+
+In this part, we've used a k8s object `secret` to protect our API key. First run the following command to encode your API key:
 
 ```bash
-npm install
-npm start
+echo -n "<your_api_key>`" | base64
 ```
 
-And you will get this:
+for example:
 
 ```bash
-Compiled successfully!
-
-You can now view cloud-drive-app in the browser.
-
-  Local:            http://localhost:3000
-  On Your Network:  http://172.31.34.17:3000
-
-Note that the development build is not optimized.
-To create a production build, use npm run build.
-
-webpack compiled successfully
+echo -n "sk-1234567890" | base64
 ```
 
-Click the localhost and then you will get the UI in your browser:
+Then replace the value of `api-key` in `ai-secrets.yaml` with the output of the above command.
 
-![1721289370502](image/README/1721289370502.png)
+#### Deploy the application
 
 #### 3.2.2 AI Agent Deployment
 
@@ -341,11 +338,15 @@ kubectl apply -f transit-service.yaml
 kubectl apply -f transit-deployment.yaml
 ```
 
-## 4. Application Deployment
+```bash
+cd finetune
+docker build -t <your dockerhub name>/finetune .
+docker push <your dockerhub name>/finetune
+```
 
 Here are brief information concerning application deployment. You can get detailed steps in __3. Environment Setup__
 
-If you just want to experience our App rather than deploying it, please jump to __2. Quick Start__
+For the second, no additional steps are needed.
 
 - WebUI Deployment
 

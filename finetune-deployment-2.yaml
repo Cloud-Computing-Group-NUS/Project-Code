@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finetune
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: finetune
+  template:
+    metadata:
+      labels:
+        app: finetune
+    spec:
+      containers:
+      - name: finetune
+        image: charlottexia/ai_finetune
+        envFrom:
+        - secretRef:
+            name: ai-agent-secret
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: finetune-pv
+          mountPath: /data/finetune
+      volumes:
+      - name: finetune-pv
+        persistentVolumeClaim:
+          claimName: aws-finetune-pvc
+          # claimName: finetune-pvc
